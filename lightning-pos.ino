@@ -1,4 +1,4 @@
-ood/**
+/**
  *  Flux Capacitor PoS Terminal - a point of sale terminal which can accept bitcoin via lightning network
  *  
  *
