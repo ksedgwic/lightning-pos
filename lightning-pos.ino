@@ -29,6 +29,7 @@
 GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4));
 
 char wifiSSID[] = "1740Buena";
+// char wifiSSID[] = "BonsaiNet3";
 char wifiPASS[] = "smalltree";
 
 const char* host = "api.opennode.co";
@@ -189,7 +190,7 @@ fetchpayment(amount);
   }
   else{
   digitalWrite(19, HIGH);
-  delay(4000);
+  delay(8000);
   digitalWrite(19, LOW);
   delay(500);
   counta = 30;
@@ -253,8 +254,8 @@ display.firstPage();
   display.setCursor(20, 20);
   display.println("Amount then #");
   display.println();
-  display.println("Sats: ");
   display.println(on_currency.substring(3) + ": ");
+  display.println("Sats: ");
   display.setFont(&FreeSansBold9pt7b);
   display.println(" Press * to clear");
 
@@ -327,9 +328,9 @@ void showPartialUpdate(String satoshisString)
   display.setTextColor(GxEPD_BLACK);
 
  // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-  display.setPartialWindow(60, 65, 120, 20);
-  display.setCursor(60, 81);
-  display.print(satoshisString); 
+  display.setPartialWindow(60, 60, 120, 20);
+  display.setCursor(60, 78);
+  display.print(fiatscum); 
 
   }
   while (display.nextPage());{
@@ -343,8 +344,8 @@ void showPartialUpdate(String satoshisString)
 
  // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
   display.setPartialWindow(60, 90, 120, 20);
-  display.setCursor(60, 106); 
-  display.print(fiatscum); 
+  display.setCursor(60, 108); 
+  display.print(satoshisString); 
 
   }
   while (display.nextPage());{
