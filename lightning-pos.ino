@@ -218,10 +218,6 @@ void qrmmaker(String xxx){
     }
 }
 
-
-
-
-
 //Function for keypad
 void keypadamount(){
     display.firstPage();
@@ -286,9 +282,6 @@ void keypadamount(){
     checker = 0;
 }
 
-
-
-
 void showPartialUpdate(String satoshisString)
 {
     float fiat = price.toFloat();
@@ -328,9 +321,7 @@ void showPartialUpdate(String satoshisString)
     }
 }
 
-
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
-
 
 void ONprice(){
     WiFiClientSecure client;
@@ -366,8 +357,6 @@ void ONprice(){
     price = temp;
     Serial.println(price);
 }
-
-
 
 void fetchpayment(String SATSAMOUNT){
     WiFiClientSecure client;
@@ -411,9 +400,6 @@ void fetchpayment(String SATSAMOUNT){
         doc["data"]["lightning_invoice"]["payreq"];
     data_lightning_invoice_payreq = data_lightning_invoice_payreqq;
 }
-
-
-
 
 void checkpayment(String PAYID){
 
