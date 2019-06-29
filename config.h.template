@@ -1,0 +1,8 @@
+// Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
+
+char wifiSSID[] = "YOUR-WIFI-SSID";
+char wifiPASS[] = "YOUR-WIFI-PASS";
+
+String apikey = "YOUR-OPENNODE-API-KEY";
+String description = "Your Invoice Description"; //invoice description
+String on_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc

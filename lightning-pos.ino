@@ -25,20 +25,14 @@
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 
+#include "config.h"
 
 GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4));
-
-char wifiSSID[] = "1740Buena";
-// char wifiSSID[] = "BonsaiNet3";
-char wifiPASS[] = "smalltree";
 
 const char* host = "api.opennode.co";
 const int httpsPort = 443;
 String amount = ""; 
-String apikey = "ad4defd1-0e8d-4b04-bc7e-cb3a576d4aae";
-String description = "Bonsai PoS"; //invoice description
 String hints = "false"; 
-String on_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
 String price;
 
 String data_lightning_invoice_payreq = "";
