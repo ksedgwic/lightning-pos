@@ -75,10 +75,10 @@ char ref[2][16][5]={
 const byte rows = 4; //four rows
 const byte cols = 3; //three columns
 char keys[rows][cols] = {
-  {'1','2','3'},
-  {'4','5','6'},
-  {'7','8','9'},
-  {'*','0','#'}
+                         {'1','2','3'},
+                         {'4','5','6'},
+                         {'7','8','9'},
+                         {'*','0','#'}
 };
 byte rowPins[rows] = {12, 14, 27, 26}; //connect to the row pinouts of the keypad
 byte colPins[cols] = {25, 33, 32}; //connect to the column pinouts of the keypad
@@ -86,128 +86,115 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 int checker = 0;
 char maxdig[20];
 
-
-
 void setup() {
+    display.init(115200);
 
-display.init(115200);
-
-  display.firstPage();
-  do
-  {
-  display.setRotation(1);  
-  display.fillScreen(GxEPD_WHITE);
-  display.setFont(&FreeSansBold12pt7b);
-  display.setTextColor(GxEPD_BLACK);
-  display.setCursor(0, 80);
-  display.println("Loading :)");
-  }
-  while (display.nextPage());{
-  }
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);  
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeSansBold12pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(0, 80);
+        display.println("Loading :)");
+    }
+    while (display.nextPage());{
+    }
 
   
-Serial.begin(115200); 
+    Serial.begin(115200); 
            
-  WiFi.begin(wifiSSID, wifiPASS);   
-  while (WiFi.status() != WL_CONNECTED) {
-     Serial.println("connecting");
-     delay(100);
-     }
+    WiFi.begin(wifiSSID, wifiPASS);   
+    while (WiFi.status() != WL_CONNECTED) {
+        Serial.println("connecting");
+        delay(100);
+    }
      
-  Serial.println("connected");
+    Serial.println("connected");
 
-  pinMode(19, OUTPUT);
+    pinMode(19, OUTPUT);
 
-  ONprice();
-
+    ONprice();
 }
 
 void loop() {
   
-memset(maxdig, 0, 20);
-checker = 20;
-int counta = 0;
+    memset(maxdig, 0, 20);
+    checker = 20;
+    int counta = 0;
 
-hexvalues = "";
+    hexvalues = "";
 
+    while (*maxdig == 0){
+        keypadamount();
+        amount = String(maxdig);
+    }
 
-while (*maxdig == 0){
- keypadamount();
- amount = String(maxdig);
-}
+    fetchpayment(amount);
 
-fetchpayment(amount);
+    qrmmaker(data_lightning_invoice_payreq);
 
-  qrmmaker(data_lightning_invoice_payreq);
-
-     for (int i = 0;  i < line.length(); i+=4){      
+    for (int i = 0;  i < line.length(); i+=4){      
         int tmp = i; 
         setoffour = line.substring(tmp, tmp+4); 
        
-             for (int z = 0; z < 16; z++){
-               if (setoffour == ref[0][z]){
+        for (int z = 0; z < 16; z++){
+            if (setoffour == ref[0][z]){
                 hexvalues += ref[1][z];
-               }
-             }
-      }
+            }
+        }
+    }
 
-  line = "";
+    line = "";
 
-//for loop to build the epaper friendly char singlehex byte array image of the QR
-  for (int i = 0;  i < 4209; i++){
-     int tmp = i;   
-     int pmt = tmp*2; 
-     result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
-     singlehex[tmp] = (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(), NULL, 16);
-  }
+    //for loop to build the epaper friendly char singlehex byte array image of the QR
+    for (int i = 0;  i < 4209; i++){
+        int tmp = i;   
+        int pmt = tmp*2; 
+        result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
+        singlehex[tmp] = (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(), NULL, 16);
+    }
 
+    display.firstPage();
+    do
+    {
+        display.setPartialWindow(0, 0, 200, 200);
+        display.fillScreen(GxEPD_WHITE);
+        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK); 
   
-
-  display.firstPage();
-  do
-  {
-  display.setPartialWindow(0, 0, 200, 200);
-  display.fillScreen(GxEPD_WHITE);
-  display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK); 
-  
-  }
-  while (display.nextPage());{
-  }
-
+    }
+    while (display.nextPage());{
+    }
  
-  checkpayment(data_id);
- while (counta < 30){
-  if (data_status == "unpaid"){
-    delay(1000);
-   checkpayment(data_id);
-   counta++;
-  }
-  else{
-  digitalWrite(19, HIGH);
-  delay(8000);
-  digitalWrite(19, LOW);
-  delay(500);
-  counta = 30;
-    }  
-  }
-  counta = 0;
-  
-
+    checkpayment(data_id);
+    while (counta < 30){
+        if (data_status == "unpaid"){
+            delay(1000);
+            checkpayment(data_id);
+            counta++;
+        }
+        else{
+            digitalWrite(19, HIGH);
+            delay(8000);
+            digitalWrite(19, LOW);
+            delay(500);
+            counta = 30;
+        }  
+    }
+    counta = 0;
 }
 
 
 // QR maker function
 void qrmmaker(String xxx){
-
-int str_len = xxx.length() + 1; 
-char xxxx[str_len];
-xxx.toCharArray(xxxx, str_len);
-
+    int str_len = xxx.length() + 1; 
+    char xxxx[str_len];
+    xxx.toCharArray(xxxx, str_len);
 
     QRCode qrcode;
     uint8_t qrcodeData[qrcode_getBufferSize(11)];
     qrcode_initText(&qrcode, qrcodeData, 11, 0, xxxx);
-  
 
     int une = 0;
     
@@ -217,15 +204,15 @@ xxx.toCharArray(xxxx, str_len);
 
         // Each horizontal module
         for (uint8_t x = 0; x < qrcode.size; x++) {
-          line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
         line += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-          line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
         line += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-          line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
         line += "1";    
     }
@@ -237,70 +224,66 @@ xxx.toCharArray(xxxx, str_len);
 
 //Function for keypad
 void keypadamount(){
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeSansBold12pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(20, 20);
+        display.println("Amount then #");
+        display.println();
+        display.println(on_currency.substring(3) + ": ");
+        display.println("Sats: ");
+        display.setFont(&FreeSansBold9pt7b);
+        display.println(" Press * to clear");
 
-display.firstPage();
-  do
-  {
-  display.setRotation(1);
-  display.fillScreen(GxEPD_WHITE);
-  display.setFont(&FreeSansBold12pt7b);
-  display.setTextColor(GxEPD_BLACK);
-  display.setCursor(20, 20);
-  display.println("Amount then #");
-  display.println();
-  display.println(on_currency.substring(3) + ": ");
-  display.println("Sats: ");
-  display.setFont(&FreeSansBold9pt7b);
-  display.println(" Press * to clear");
+    }
+    while (display.nextPage());{
+    }
 
-  }
-  while (display.nextPage());{
-  }
-
-  while (checker < 20){
-  
-   char key = keypad.getKey();
+    while (checker < 20){
+        char key = keypad.getKey();
    
-   if (key != NO_KEY){
-   String virtkey = String(key);
+        if (key != NO_KEY){
+            String virtkey = String(key);
    
-   if (virtkey == "*"){
-    memset(maxdig, 0, 20);
-    checker = 20;
-   }
+            if (virtkey == "*"){
+                memset(maxdig, 0, 20);
+                checker = 20;
+            }
     
-   if (virtkey == "#"){
+            if (virtkey == "#"){
 
-     display.firstPage();
-     do
-     {
-     display.setRotation(1);
-     display.setPartialWindow(0, 0, 200, 200);
-     display.fillScreen(GxEPD_WHITE);
-     display.setFont(&FreeSansBold12pt7b);
-     display.setTextColor(GxEPD_BLACK);
-     display.setCursor(20, 20);
-     display.println("Processing...");
+                display.firstPage();
+                do
+                {
+                    display.setRotation(1);
+                    display.setPartialWindow(0, 0, 200, 200);
+                    display.fillScreen(GxEPD_WHITE);
+                    display.setFont(&FreeSansBold12pt7b);
+                    display.setTextColor(GxEPD_BLACK);
+                    display.setCursor(20, 20);
+                    display.println("Processing...");
 
-     }
-     while (display.nextPage());{
-     }
-    Serial.println("Finished");
-    checker = 20;
-   }
-   else{
+                }
+                while (display.nextPage());{
+                }
+                Serial.println("Finished");
+                checker = 20;
+            }
+            else {
   
-    maxdig[checker] = key;
-    checker++;
-    Serial.println(maxdig);
+                maxdig[checker] = key;
+                checker++;
+                Serial.println(maxdig);
 
-
-    showPartialUpdate(maxdig);
-   }
-   }
-
-  }
-  checker = 0;
+                showPartialUpdate(maxdig);
+            }
+        }
+    }
+    checker = 0;
 }
 
 
@@ -308,44 +291,41 @@ display.firstPage();
 
 void showPartialUpdate(String satoshisString)
 {
-  float fiat = price.toFloat();
-  float sats = satoshisString.toFloat();
+    float fiat = price.toFloat();
+    float sats = satoshisString.toFloat();
 
-  float fiatscum = sats / 100000000 * fiat;
-
+    float fiatscum = sats / 100000000 * fiat;
   
-  display.firstPage();
-  do
-  {
-  display.setRotation(1);
-  display.setFont(&FreeSansBold12pt7b);
-  display.setTextColor(GxEPD_BLACK);
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);
+        display.setFont(&FreeSansBold12pt7b);
+        display.setTextColor(GxEPD_BLACK);
 
- // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-  display.setPartialWindow(60, 60, 120, 20);
-  display.setCursor(60, 78);
-  display.print(fiatscum); 
+        // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+        display.setPartialWindow(60, 60, 120, 20);
+        display.setCursor(60, 78);
+        display.print(fiatscum); 
 
-  }
-  while (display.nextPage());{
-  }
-  display.firstPage();
-  do
-  {
-  display.setRotation(1);
-  display.setFont(&FreeSansBold12pt7b);
-  display.setTextColor(GxEPD_BLACK);
+    }
+    while (display.nextPage());{
+    }
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);
+        display.setFont(&FreeSansBold12pt7b);
+        display.setTextColor(GxEPD_BLACK);
 
- // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-  display.setPartialWindow(60, 90, 120, 20);
-  display.setCursor(60, 108); 
-  display.print(satoshisString); 
+        // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+        display.setPartialWindow(60, 90, 120, 20);
+        display.setCursor(60, 108); 
+        display.print(satoshisString); 
 
-  }
-  while (display.nextPage());{
-  }
-
-  
+    }
+    while (display.nextPage());{
+    }
 }
 
 
@@ -353,61 +333,55 @@ void showPartialUpdate(String satoshisString)
 
 
 void ONprice(){
-  WiFiClientSecure client;
+    WiFiClientSecure client;
 
-  if (!client.connect(host, httpsPort)) {
+    if (!client.connect(host, httpsPort)) {
 
-    return;
-  }
-
-
-
-  String url = "/v1/rates";
-
-
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "User-Agent: ESP32\r\n" +
-               "Connection: close\r\n\r\n");
-
-  while (client.connected()) {
-
-     String line = client.readStringUntil('\n');
-    if (line == "\r") {
-
-      break;
+        return;
     }
-  }
-  String line = client.readStringUntil('\n');
+
+    String url = "/v1/rates";
+
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "User-Agent: ESP32\r\n" +
+                 "Connection: close\r\n\r\n");
+
+    while (client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+
+            break;
+        }
+    }
+    String line = client.readStringUntil('\n');
   
-    const size_t capacity = 169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
+    const size_t capacity =
+        169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
     DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
 
-String temp = doc["data"][on_currency][on_currency.substring(3)]; 
-price = temp;
-Serial.println(price);
-
-
+    String temp = doc["data"][on_currency][on_currency.substring(3)]; 
+    price = temp;
+    Serial.println(price);
 }
 
 
 
 void fetchpayment(String SATSAMOUNT){
+    WiFiClientSecure client;
 
+    if (!client.connect(host, httpsPort)) {
+        return;
+    }
 
-  WiFiClientSecure client;
+    String topost =
+        "{  \"amount\": \""+ SATSAMOUNT +"\", \"description\": \""+
+        description  +"\", \"route_hints\": \""+ hints  +"\"}";
+    String url = "/v1/charges";
 
-  if (!client.connect(host, httpsPort)) {
-
-    return;
-  }
-
-  String topost = "{  \"amount\": \""+ SATSAMOUNT +"\", \"description\": \""+ description  +"\", \"route_hints\": \""+ hints  +"\"}";
-  String url = "/v1/charges";
-
-   client.print(String("POST ") + url + " HTTP/1.1\r\n" +
+    client.print(String("POST ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Authorization: " + apikey + "\r\n" +
@@ -417,24 +391,24 @@ void fetchpayment(String SATSAMOUNT){
                  "\r\n" + 
                  topost + "\n");
 
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") {
-
-      break;
+    while (client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+            break;
+        }
     }
-  }
-  String line = client.readStringUntil('\n');
-
+    String line = client.readStringUntil('\n');
   
-    const size_t capacity = 169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
+    const size_t capacity =
+        169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
     DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
 
     String data_idd = doc["data"]["id"]; 
     data_id = data_idd;
-    String data_lightning_invoice_payreqq = doc["data"]["lightning_invoice"]["payreq"];
+    String data_lightning_invoice_payreqq =
+        doc["data"]["lightning_invoice"]["payreq"];
     data_lightning_invoice_payreq = data_lightning_invoice_payreqq;
 }
 
@@ -443,41 +417,36 @@ void fetchpayment(String SATSAMOUNT){
 
 void checkpayment(String PAYID){
 
-  WiFiClientSecure client;
+    WiFiClientSecure client;
 
-  if (!client.connect(host, httpsPort)) {
-
-    return;
-  }
-
-  String url = "/v1/charge/" + PAYID;
-
-
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Authorization: " + apikey + "\r\n" +
-               "User-Agent: ESP32\r\n" +
-               "Connection: close\r\n\r\n");
-
-
-  while (client.connected()) {
-
-    
-    String line = client.readStringUntil('\n');
-    if (line == "\r") {
-      break;
+    if (!client.connect(host, httpsPort)) {
+        return;
     }
-  }
-  String line = client.readStringUntil('\n');
 
+    String url = "/v1/charge/" + PAYID;
 
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Authorization: " + apikey + "\r\n" +
+                 "User-Agent: ESP32\r\n" +
+                 "Connection: close\r\n\r\n");
+
+    while (client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+            break;
+        }
+    }
+    String line = client.readStringUntil('\n');
   
-const size_t capacity = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(14) + 650;
- DynamicJsonDocument doc(capacity);
+    const size_t capacity =
+        JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
+        JSON_OBJECT_SIZE(14) + 650;
+    DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
 
-String data_statuss = doc["data"]["status"]; 
-data_status = data_statuss;
-Serial.println(data_status);
+    String data_statuss = doc["data"]["status"]; 
+    data_status = data_statuss;
+    Serial.println(data_status);
 }
