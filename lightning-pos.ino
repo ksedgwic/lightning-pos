@@ -148,12 +148,15 @@ void loop() {
 
     line = "";
 
-    //for loop to build the epaper friendly char singlehex byte array image of the QR
+    //for loop to build the epaper friendly char singlehex byte array
+    //image of the QR
     for (int i = 0;  i < 4209; i++){
         int tmp = i;   
         int pmt = tmp*2; 
         result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
-        singlehex[tmp] = (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(), NULL, 16);
+        singlehex[tmp] =
+            (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(),
+                                  NULL, 16);
     }
 
     display.firstPage();
@@ -184,7 +187,6 @@ void loop() {
     }
     counta = 0;
 }
-
 
 // QR maker function
 void qrmmaker(String xxx){
@@ -269,8 +271,8 @@ void keypadamount(){
                 Serial.println("Finished");
                 checker = 20;
             }
-            else {
-  
+            else
+            {
                 maxdig[checker] = key;
                 checker++;
                 Serial.println(maxdig);
@@ -366,8 +368,8 @@ void fetchpayment(String SATSAMOUNT){
     }
 
     String topost =
-        "{  \"amount\": \""+ SATSAMOUNT +"\", \"description\": \""+
-        description  +"\", \"route_hints\": \""+ hints  +"\"}";
+        "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
+        description + "\", \"route_hints\": \"" + hints + "\"}";
     String url = "/v1/charges";
 
     client.print(String("POST ") + url + " HTTP/1.1\r\n" +
