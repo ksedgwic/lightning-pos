@@ -86,6 +86,8 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 int checker = 0;
 char maxdig[20];
 
+long sats = 0;
+
 void setup() {
     display.init(115200);
 
@@ -119,7 +121,6 @@ void setup() {
 }
 
 void loop() {
-  
     memset(maxdig, 0, 20);
     checker = 20;
     int counta = 0;
@@ -131,7 +132,7 @@ void loop() {
         amount = String(maxdig);
     }
 
-    fetchpayment(amount);
+    fetchpayment(sats);
 
     qrmmaker(data_lightning_invoice_payreq);
 
@@ -221,7 +222,7 @@ void qrmmaker(String xxx){
 }
 
 //Function for keypad
-void keypadamount(){
+void keypadamount() {
     display.firstPage();
     do
     {
@@ -253,7 +254,6 @@ void keypadamount(){
             }
     
             if (virtkey == "#"){
-
                 display.firstPage();
                 do
                 {
@@ -284,13 +284,14 @@ void keypadamount(){
     checker = 0;
 }
 
-void showPartialUpdate(String satoshisString)
-{
-    float fiat = price.toFloat();
-    float sats = satoshisString.toFloat();
+// Display current amount, returns satoshis
+void showPartialUpdate(String centsStr) {
+    
+    float rate = price.toFloat();
 
-    float fiatscum = sats / 100000000 * fiat;
-  
+    float fiat = centsStr.toFloat() / 100.0;
+    sats = long(fiat * 100e6 / rate);
+    
     display.firstPage();
     do
     {
@@ -301,11 +302,12 @@ void showPartialUpdate(String satoshisString)
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
         display.setPartialWindow(60, 60, 120, 20);
         display.setCursor(60, 78);
-        display.print(fiatscum); 
+        display.print(fiat); 
 
     }
     while (display.nextPage());{
     }
+    
     display.firstPage();
     do
     {
@@ -316,7 +318,7 @@ void showPartialUpdate(String satoshisString)
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
         display.setPartialWindow(60, 90, 120, 20);
         display.setCursor(60, 108); 
-        display.print(satoshisString); 
+        display.print(sats); 
 
     }
     while (display.nextPage());{
@@ -360,13 +362,14 @@ void ONprice(){
     Serial.println(price);
 }
 
-void fetchpayment(String SATSAMOUNT){
+void fetchpayment(long sats){
     WiFiClientSecure client;
 
     if (!client.connect(host, httpsPort)) {
         return;
     }
 
+    String SATSAMOUNT = String(sats);
     String topost =
         "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
         description + "\", \"route_hints\": \"" + hints + "\"}";
