@@ -246,6 +246,13 @@ void keypadamount() {
         char key = keypad.getKey();
    
         if (key != NO_KEY){
+
+            // TODO - Hide this delay behind initial transition.
+            // // Refresh the price.
+            // if (checker == 0) {
+            //     ONprice();
+            // }
+                
             String virtkey = String(key);
    
             if (virtkey == "*"){
@@ -327,11 +334,10 @@ void showPartialUpdate(String centsStr) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-void ONprice(){
+void ONprice() {
     WiFiClientSecure client;
 
     if (!client.connect(host, httpsPort)) {
-
         return;
     }
 
@@ -345,7 +351,6 @@ void ONprice(){
     while (client.connected()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-
             break;
         }
     }
