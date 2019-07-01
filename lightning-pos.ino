@@ -180,6 +180,7 @@ void loop() {
             counta++;
         }
         else{
+            displayText(10, 100, "Success! Thank You");
             digitalWrite(19, HIGH);
             delay(8000);
             digitalWrite(19, LOW);
