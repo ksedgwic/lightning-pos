@@ -71,16 +71,16 @@ char ref[2][16][5]={
 };
 
 //Set keypad
-const byte rows = 4; //four rows
-const byte cols = 3; //three columns
+const byte rows = 4;
+const byte cols = 4;
 char keys[rows][cols] = {
-                         {'1','2','3'},
-                         {'4','5','6'},
-                         {'7','8','9'},
-                         {'*','0','#'}
+                         {'1','2','3','A'},
+                         {'4','5','6','B'},
+                         {'7','8','9','C'},
+                         {'*','0','#','D'}
 };
-byte rowPins[rows] = {12, 14, 27, 26}; //connect to the row pinouts of the keypad
-byte colPins[cols] = {25, 33, 32}; //connect to the column pinouts of the keypad
+byte rowPins[rows] = {12, 14, 27, 26};
+byte colPins[cols] = {25, 33, 32, 35};
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 char maxdig[20];
 
@@ -174,12 +174,13 @@ void loop() {
  
     checkpayment(data_id);
     while (counta < 60) {
-        if (data_status == "unpaid"){
+        if (data_status == "unpaid") {
             delay(1000);
             checkpayment(data_id);
             counta++;
         }
-        else{
+        else
+        {
             displayText(10, 100, "Success! Thank You");
             digitalWrite(19, HIGH);
             delay(8000);
@@ -231,28 +232,29 @@ void keypadamount() {
     int checker = 0;
     while (checker < 20) {
         char key = keypad.getKey();
-   
-        if (key != NO_KEY){
-            String virtkey = String(key);
-   
-            if (virtkey == "*"){
-                memset(maxdig, 0, 20);
-                showPartialUpdate(maxdig);
-                return;
-            }
-    
-            if (virtkey == "#"){
-                displayText(20, 100, "Processing ...");
-                Serial.println("Finished");
-                return;
-            }
-            else
-            {
-                maxdig[checker] = key;
-                checker++;
-                Serial.println(maxdig);
-                showPartialUpdate(maxdig);
-            }
+        switch (key) {
+        case NO_KEY:
+            break;
+        case '*':
+            memset(maxdig, 0, 20);
+            showPartialUpdate(maxdig);
+            return;
+        case '#':
+            displayText(20, 100, "Processing ...");
+            Serial.println("Finished");
+            return;
+        case 'A':
+            memset(maxdig, 0, 20);
+            memcpy(maxdig, "400", 3);
+            checker = 3;
+            showPartialUpdate(maxdig);
+            break;
+        default:
+            maxdig[checker] = key;
+            checker++;
+            Serial.println(maxdig);
+            showPartialUpdate(maxdig);
+            break;
         }
     }
 }
