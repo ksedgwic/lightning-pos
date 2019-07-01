@@ -79,8 +79,8 @@ char keys[rows][cols] = {
                          {'7','8','9','C'},
                          {'*','0','#','D'}
 };
-byte rowPins[rows] = {12, 14, 27, 26};
-byte colPins[cols] = {25, 33, 32, 35};
+byte rowPins[rows] = {13, 12, 14, 27};
+byte colPins[cols] = {26, 25, 33, 32};
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 char maxdig[20];
 
