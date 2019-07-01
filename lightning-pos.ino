@@ -93,7 +93,7 @@ void displayText(int col, int row, String txt) {
         display.setRotation(1);  
         display.setPartialWindow(0, 0, 200, 200);
         display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeSansBold12pt7b);
+        display.setFont(&FreeSansBold9pt7b);
         display.setTextColor(GxEPD_BLACK);
         display.setCursor(col, row);
         display.println(txt);
@@ -224,20 +224,14 @@ void qrmmaker(String xxx){
 
 //Function for keypad
 void keypadamount() {
+    // Refresh the exchange rate.
+    ONprice();
     displayAmountPage();
-
     int checker = 0;
     while (checker < 20) {
         char key = keypad.getKey();
    
         if (key != NO_KEY){
-
-            // TODO - Hide this delay behind initial transition.
-            // // Refresh the price.
-            // if (checker == 0) {
-            //     ONprice();
-            // }
-                
             String virtkey = String(key);
    
             if (virtkey == "*"){
@@ -331,6 +325,8 @@ void showPartialUpdate(String centsStr) {
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
 void ONprice() {
+    displayText(10, 100, "Updating " + on_currency + " ...");
+    
     WiFiClientSecure client;
 
     if (!client.connect(host, httpsPort)) {
