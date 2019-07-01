@@ -101,9 +101,7 @@ void setup() {
         display.setCursor(0, 80);
         display.println("Loading :)");
     }
-    while (display.nextPage());{
-    }
-
+    while (display.nextPage());
   
     Serial.begin(115200); 
            
@@ -127,7 +125,7 @@ void loop() {
 
     hexvalues = "";
 
-    while (*maxdig == 0){
+    while (*maxdig == 0) {
         keypadamount();
         amount = String(maxdig);
     }
@@ -136,7 +134,7 @@ void loop() {
 
     qrmmaker(data_lightning_invoice_payreq);
 
-    for (int i = 0;  i < line.length(); i+=4){      
+    for (int i = 0;  i < line.length(); i+=4) {      
         int tmp = i; 
         setoffour = line.substring(tmp, tmp+4); 
        
@@ -151,7 +149,7 @@ void loop() {
 
     //for loop to build the epaper friendly char singlehex byte array
     //image of the QR
-    for (int i = 0;  i < 4209; i++){
+    for (int i = 0;  i < 4209; i++) {
         int tmp = i;   
         int pmt = tmp*2; 
         result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
@@ -168,11 +166,10 @@ void loop() {
         display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK); 
   
     }
-    while (display.nextPage());{
-    }
+    while (display.nextPage());
  
     checkpayment(data_id);
-    while (counta < 30){
+    while (counta < 60) {
         if (data_status == "unpaid"){
             delay(1000);
             checkpayment(data_id);
@@ -183,7 +180,7 @@ void loop() {
             delay(8000);
             digitalWrite(19, LOW);
             delay(500);
-            counta = 30;
+            counta = 60;
         }  
     }
     counta = 0;
@@ -239,10 +236,9 @@ void keypadamount() {
         display.println(" Press * to clear");
 
     }
-    while (display.nextPage());{
-    }
+    while (display.nextPage());
 
-    while (checker < 20){
+    while (checker < 20) {
         char key = keypad.getKey();
    
         if (key != NO_KEY){
@@ -273,8 +269,7 @@ void keypadamount() {
                     display.println("Processing...");
 
                 }
-                while (display.nextPage());{
-                }
+                while (display.nextPage());
                 Serial.println("Finished");
                 checker = 20;
             }
@@ -312,8 +307,7 @@ void showPartialUpdate(String centsStr) {
         display.print(fiat); 
 
     }
-    while (display.nextPage());{
-    }
+    while (display.nextPage());
     
     display.firstPage();
     do
@@ -328,8 +322,7 @@ void showPartialUpdate(String centsStr) {
         display.print(sats); 
 
     }
-    while (display.nextPage());{
-    }
+    while (display.nextPage());
 }
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
