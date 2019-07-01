@@ -40,7 +40,6 @@ String data_status = "unpaid";
 String data_id = "";
 int counta = 0;
 
-
 //Set other Arduino Strings used
 String setoffour = "";
 String right = "";
@@ -83,28 +82,34 @@ char keys[rows][cols] = {
 byte rowPins[rows] = {12, 14, 27, 26}; //connect to the row pinouts of the keypad
 byte colPins[cols] = {25, 33, 32}; //connect to the column pinouts of the keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
-int checker = 0;
 char maxdig[20];
 
 long sats = 0;
 
-void setup() {
-    display.init(115200);
-
+void displayText(int col, int row, String txt) {
     display.firstPage();
     do
     {
         display.setRotation(1);  
+        display.setPartialWindow(0, 0, 200, 200);
         display.fillScreen(GxEPD_WHITE);
         display.setFont(&FreeSansBold12pt7b);
         display.setTextColor(GxEPD_BLACK);
-        display.setCursor(0, 80);
-        display.println("Loading :)");
+        display.setCursor(col, row);
+        display.println(txt);
     }
     while (display.nextPage());
+}    
+
+void setup() {
+    display.init(115200);
+
+    displayText(20, 100, "Loading ...");
   
     Serial.begin(115200); 
            
+    displayText(20, 100, "Connecting ...");
+    
     WiFi.begin(wifiSSID, wifiPASS);   
     while (WiFi.status() != WL_CONNECTED) {
         Serial.println("connecting");
@@ -120,7 +125,6 @@ void setup() {
 
 void loop() {
     memset(maxdig, 0, 20);
-    checker = 20;
     int counta = 0;
 
     hexvalues = "";
@@ -220,24 +224,9 @@ void qrmmaker(String xxx){
 
 //Function for keypad
 void keypadamount() {
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeSansBold12pt7b);
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(20, 20);
-        display.println("Amount then #");
-        display.println();
-        display.println(on_currency.substring(3) + ": ");
-        display.println("Sats: ");
-        display.setFont(&FreeSansBold9pt7b);
-        display.println(" Press * to clear");
+    displayAmountPage();
 
-    }
-    while (display.nextPage());
-
+    int checker = 0;
     while (checker < 20) {
         char key = keypad.getKey();
    
@@ -253,40 +242,54 @@ void keypadamount() {
    
             if (virtkey == "*"){
                 memset(maxdig, 0, 20);
-                checker = 20;
+                showPartialUpdate(maxdig);
+                return;
             }
     
             if (virtkey == "#"){
-                display.firstPage();
-                do
-                {
-                    display.setRotation(1);
-                    display.setPartialWindow(0, 0, 200, 200);
-                    display.fillScreen(GxEPD_WHITE);
-                    display.setFont(&FreeSansBold12pt7b);
-                    display.setTextColor(GxEPD_BLACK);
-                    display.setCursor(20, 20);
-                    display.println("Processing...");
-
-                }
-                while (display.nextPage());
+                displayText(20, 100, "Processing ...");
                 Serial.println("Finished");
-                checker = 20;
+                return;
             }
             else
             {
                 maxdig[checker] = key;
                 checker++;
                 Serial.println(maxdig);
-
                 showPartialUpdate(maxdig);
             }
         }
     }
-    checker = 0;
 }
 
-// Display current amount, returns satoshis
+void displayAmountPage() {
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);
+        display.setPartialWindow(0, 0, 200, 200);
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeSansBold12pt7b);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setCursor(0, 20);
+        display.println(" " + description);
+
+        display.setCursor(0, 60);
+        display.println(" Enter Amount");
+        display.println(" " + on_currency.substring(3) + ": ");
+        display.println(" Sats: ");
+
+        display.setFont(&FreeSansBold9pt7b);
+        display.setCursor(0, 160);
+        display.println("   Press * to clear");
+        display.println("   Press # when done");
+
+    }
+    while (display.nextPage());
+}
+
+// Display current amount
 void showPartialUpdate(String centsStr) {
     
     float rate = price.toFloat();
@@ -302,8 +305,8 @@ void showPartialUpdate(String centsStr) {
         display.setTextColor(GxEPD_BLACK);
 
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        display.setPartialWindow(60, 60, 120, 20);
-        display.setCursor(60, 78);
+        display.setPartialWindow(70, 69, 120, 20);
+        display.setCursor(70, 89);
         display.print(fiat); 
 
     }
@@ -317,8 +320,8 @@ void showPartialUpdate(String centsStr) {
         display.setTextColor(GxEPD_BLACK);
 
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        display.setPartialWindow(60, 90, 120, 20);
-        display.setCursor(60, 108); 
+        display.setPartialWindow(70, 98, 120, 20);
+        display.setCursor(70, 118); 
         display.print(sats); 
 
     }
