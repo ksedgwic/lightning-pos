@@ -195,8 +195,9 @@ void loop() {
 
     hexvalues = "";
 
-    while (*keybuf == 0) {
-        keypadamount();
+    // If keypadamount returns false, return to main menu.
+    if (!keypadamount()) {
+        return;
     }
 
     fetchpayment(sats);
@@ -300,7 +301,7 @@ int applyPreset() {
 }
 
 //Function for keypad
-void keypadamount() {
+bool keypadamount() {
     // Refresh the exchange rate.
     ONprice();
     applyPreset();
@@ -314,10 +315,16 @@ void keypadamount() {
             break;
         case '#':
             displayText(20, 100, "Processing ...");
-            return;
+            return true;
         case '*':
-            checker = applyPreset();
-            break;
+            if (presets[preset].price != 0.00) {
+                // Pressing '*' with preset value returns to main menu.
+                return false;
+            } else {
+                // Otherwise clear value and stay on screen.
+                checker = applyPreset();
+                break;
+            }
         case 'A':
         case 'B':
         case 'C':
@@ -333,6 +340,8 @@ void keypadamount() {
             break;
         }
     }
+    // Only get here when we overflow the keybuf.
+    return false;
 }
 
 void displayAmountPage() {
@@ -359,7 +368,11 @@ void displayAmountPage() {
 
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(0, 160);
-        display.println("   Press * to clear");
+        if (presets[preset].price == 0.00) {
+            display.println("   Press * to clear");
+        } else {
+            display.println("   Press * to cancel");
+        }
         display.println("   Press # when done");
 
     }
