@@ -242,7 +242,13 @@ void loop() {
     checkpayment(data_id);
     while (counta < 40) {
         if (data_status == "unpaid") {
-            delay(1000);
+            // Delay for 1 second, checking for abort.
+            for (int nn = 0; nn < 1000; ++nn) {
+                if (keypad.getKey() == '*') {
+                    return;
+                }
+                delay(1);
+            }
             checkpayment(data_id);
             counta++;
         }
