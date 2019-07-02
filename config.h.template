@@ -4,5 +4,12 @@ char wifiSSID[] = "YOUR-WIFI-SSID";
 char wifiPASS[] = "YOUR-WIFI-PASS";
 
 String apikey = "YOUR-OPENNODE-API-KEY";
-String description = "Your Invoice Description"; //invoice description
 String on_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
+
+String prefix = "Starfish: ";
+preset_t presets[] = {
+                      { "Item 1",	 		 4.00 },
+                      { "Item 2",			10.00 },
+                      { "Item 3",			50.00 },
+                      { "Other Payment",	 0.00 }
+};

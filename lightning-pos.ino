@@ -5,7 +5,7 @@
  *  Epaper PIN MAP: [VCC - 3.3V, GND - GND, SDI - GPIO23, SCLK - GPIO18, 
  *                   CS - GPIO5, D/C - GPIO17, Reset - GPIO16, Busy - GPIO4]
  *                   
- *  Keypad Matrix PIN MAP: [GPIO12 - GPIO35]
+ *  Keypad Matrix PIN MAP: [Pin8 - GPIO13 -> Pin1 - GPIO32]
  *
  *  LED PIN MAP: [POS (long leg) - GPIO15, NEG (short leg) - GND]
  *
@@ -24,6 +24,11 @@
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
+
+struct preset_t {
+    String title;
+    float price;
+};
 
 #include "config.h"
 
@@ -85,6 +90,7 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 char maxdig[20];
 
 long sats = 0;
+int preset = 3;
 
 void displayText(int col, int row, String txt) {
     display.firstPage();
@@ -224,6 +230,15 @@ void qrmmaker(String xxx){
     }
 }
 
+int applyPreset() {
+    String centstr = String(presets[preset].price * 100);
+    memset(maxdig, 0, 20);
+    memcpy(maxdig, centstr.c_str(), centstr.length());
+    displayAmountPage();
+    showPartialUpdate(maxdig);
+    return centstr.length();
+}
+
 //Function for keypad
 void keypadamount() {
     // Refresh the exchange rate.
@@ -235,19 +250,19 @@ void keypadamount() {
         switch (key) {
         case NO_KEY:
             break;
-        case '*':
-            memset(maxdig, 0, 20);
-            showPartialUpdate(maxdig);
-            return;
         case '#':
             displayText(20, 100, "Processing ...");
             Serial.println("Finished");
             return;
+        case '*':
+            checker = applyPreset();
+            break;
         case 'A':
-            memset(maxdig, 0, 20);
-            memcpy(maxdig, "400", 3);
-            checker = 3;
-            showPartialUpdate(maxdig);
+        case 'B':
+        case 'C':
+        case 'D':
+            preset = key - 'A';
+            applyPreset();
             break;
         default:
             maxdig[checker] = key;
@@ -270,10 +285,14 @@ void displayAmountPage() {
         display.setTextColor(GxEPD_BLACK);
 
         display.setCursor(0, 20);
-        display.println(" " + description);
+        display.println(" " + presets[preset].title);
 
         display.setCursor(0, 60);
-        display.println(" Enter Amount");
+        if (presets[preset].price == 0.00) {
+            display.println(" Enter Amount");
+        } else {
+            display.println();
+        }
         display.println(" " + on_currency.substring(3) + ": ");
         display.println(" Sats: ");
 
@@ -372,7 +391,8 @@ void fetchpayment(long sats){
     String SATSAMOUNT = String(sats);
     String topost =
         "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
-        description + "\", \"route_hints\": \"" + hints + "\"}";
+        prefix + presets[preset].title + "\", \"route_hints\": \"" +
+        hints + "\"}";
     String url = "/v1/charges";
 
     client.print(String("POST ") + url + " HTTP/1.1\r\n" +
