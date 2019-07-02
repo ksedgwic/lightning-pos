@@ -4,16 +4,16 @@
  *  Flux Capacitor PoS Terminal - a point of sale terminal which can
  *  accept bitcoin via lightning network
  *
- *  Epaper PIN MAP: [VCC - 3.3V, GND - GND, SDI - GPIO23, SCLK - GPIO18, 
+ *  Epaper PIN MAP: [VCC - 3.3V, GND - GND, SDI - GPIO23, SCLK - GPIO18,
  *                   CS - GPIO5, D/C - GPIO17, Reset - GPIO16, Busy - GPIO4]
- *                   
+ *
  *  Keypad Matrix PIN MAP: [Pin8 - GPIO13 -> Pin1 - GPIO32]
  *
  *  LED PIN MAP: [POS (long leg) - GPIO15, NEG (short leg) - GND]
  *
  */
 
- 
+
 #include <WiFiClientSecure.h>
 
 #include <ArduinoJson.h> //Use version 5.3.0!
@@ -90,7 +90,7 @@ void displayText(int col, int row, String txt) {
     display.firstPage();
     do
     {
-        display.setRotation(1);  
+        display.setRotation(1);
         display.setPartialWindow(0, 0, 200, 200);
         display.fillScreen(GxEPD_WHITE);
         display.setFont(&FreeSansBold9pt7b);
@@ -99,13 +99,13 @@ void displayText(int col, int row, String txt) {
         display.println(txt);
     }
     while (display.nextPage());
-}    
+}
 
 void displayMenu() {
     display.firstPage();
     do
     {
-        display.setRotation(1);  
+        display.setRotation(1);
         display.setPartialWindow(0, 0, 200, 200);
         display.fillScreen(GxEPD_WHITE);
         display.setFont(&FreeSansBold18pt7b);
@@ -126,16 +126,16 @@ void setup() {
     display.init(115200);
 
     displayText(20, 100, "Loading ...");
-  
-    Serial.begin(115200); 
-           
+
+    Serial.begin(115200);
+
     int nconfs = sizeof(c_wifi_confs) / sizeof(wifi_conf_t);
     Serial.printf("scanning %d wifi confs\n", nconfs);
     int ndx = 0;
     while (true) {
         const char* ssid = c_wifi_confs[ndx].ssid.c_str();
         const char* pass = c_wifi_confs[ndx].pass.c_str();
-        
+
         Serial.printf("trying %s\n", ssid);
         displayText(10, 100, String("Trying ") + ssid);
 
@@ -154,9 +154,9 @@ void setup() {
         }
     }
 
- Connected:        
+ Connected:
     Serial.println("connected");
-    
+
     pinMode(19, OUTPUT);
 
     check_price();
@@ -180,7 +180,7 @@ void loop() {
             break;
         }
     }
-    
+
     memset(keybuf, 0, sizeof(keybuf));
     int counta = 0;
 
@@ -195,10 +195,10 @@ void loop() {
 
     qrmmaker(data_lightning_invoice_payreq);
 
-    for (int i = 0;  i < qrline.length(); i+=4) {      
-        int tmp = i; 
-        setoffour = qrline.substring(tmp, tmp+4); 
-       
+    for (int i = 0;  i < qrline.length(); i+=4) {
+        int tmp = i;
+        setoffour = qrline.substring(tmp, tmp+4);
+
         for (int z = 0; z < 16; z++){
             if (setoffour == ref[0][z]){
                 hexvalues += ref[1][z];
@@ -211,8 +211,8 @@ void loop() {
     //for loop to build the epaper friendly char singlehex byte array
     //image of the QR
     for (int i = 0;  i < 4209; i++) {
-        int tmp = i;   
-        int pmt = tmp*2; 
+        int tmp = i;
+        int pmt = tmp*2;
         result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
         singlehex[tmp] =
             (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(),
@@ -224,11 +224,11 @@ void loop() {
     {
         display.setPartialWindow(0, 0, 200, 200);
         display.fillScreen(GxEPD_WHITE);
-        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK); 
-  
+        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK);
+
     }
     while (display.nextPage());
- 
+
     checkpayment(data_id);
     while (counta < 40) {
         if (data_status == "unpaid") {
@@ -245,19 +245,20 @@ void loop() {
         else
         {
             displayText(10, 100, "Success! Thank You");
+
             digitalWrite(19, HIGH);
             delay(8000);
             digitalWrite(19, LOW);
             delay(500);
             counta = 40;
-        }  
+        }
     }
     counta = 0;
 }
 
 // QR maker function
 void qrmmaker(String xxx){
-    int str_len = xxx.length() + 1; 
+    int str_len = xxx.length() + 1;
     char xxxx[str_len];
     xxx.toCharArray(xxxx, str_len);
 
@@ -266,7 +267,7 @@ void qrmmaker(String xxx){
     qrcode_initText(&qrcode, qrcodeData, 11, 0, xxxx);
 
     int une = 0;
-    
+
     qrline = "";
 
     for (uint8_t y = 0; y < qrcode.size; y++) {
@@ -283,7 +284,7 @@ void qrmmaker(String xxx){
         for (uint8_t x = 0; x < qrcode.size; x++) {
             qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        qrline += "1";    
+        qrline += "1";
     }
 }
 
@@ -376,12 +377,12 @@ void displayAmountPage() {
 
 // Display current amount
 void showPartialUpdate(String centsStr) {
-    
+
     float rate = price.toFloat();
 
     float fiat = centsStr.toFloat() / 100.0;
     sats = long(fiat * 100e6 / rate);
-    
+
     display.firstPage();
     do
     {
@@ -392,11 +393,11 @@ void showPartialUpdate(String centsStr) {
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
         display.setPartialWindow(70, 69, 120, 20);
         display.setCursor(70, 89);
-        display.print(fiat); 
+        display.print(fiat);
 
     }
     while (display.nextPage());
-    
+
     display.firstPage();
     do
     {
@@ -406,8 +407,8 @@ void showPartialUpdate(String centsStr) {
 
         // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
         display.setPartialWindow(70, 98, 120, 20);
-        display.setCursor(70, 118); 
-        display.print(sats); 
+        display.setCursor(70, 118);
+        display.print(sats);
 
     }
     while (display.nextPage());
@@ -421,9 +422,9 @@ void check_price() {
     if (price_tstamp == 0 ||	/* first time */
         now < price_tstamp ||	/* wraps after 50 days */
         now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
-    
+
         displayText(10, 100, "Updating " + c_currency + " ...");
-    
+
         WiFiClientSecure client;
 
         if (!client.connect(host, httpsPort)) {
@@ -444,14 +445,14 @@ void check_price() {
             }
         }
         String line = client.readStringUntil('\n');
-  
+
         const size_t capacity =
             169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
         DynamicJsonDocument doc(capacity);
 
         deserializeJson(doc, line);
 
-        String temp = doc["data"][c_currency][c_currency.substring(3)]; 
+        String temp = doc["data"][c_currency][c_currency.substring(3)];
         price = temp;
         price_tstamp = now;
         Serial.println(price);
@@ -479,7 +480,7 @@ void fetchpayment(long sats){
                  "Content-Type: application/json\r\n" +
                  "Connection: close\r\n" +
                  "Content-Length: " + topost.length() + "\r\n" +
-                 "\r\n" + 
+                 "\r\n" +
                  topost + "\n");
 
     while (client.connected()) {
@@ -489,14 +490,14 @@ void fetchpayment(long sats){
         }
     }
     String line = client.readStringUntil('\n');
-  
+
     const size_t capacity =
         169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
     DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
 
-    String data_idd = doc["data"]["id"]; 
+    String data_idd = doc["data"]["id"];
     data_id = data_idd;
     String data_lightning_invoice_payreqq =
         doc["data"]["lightning_invoice"]["payreq"];
@@ -526,7 +527,7 @@ void checkpayment(String PAYID){
         }
     }
     String line = client.readStringUntil('\n');
-  
+
     const size_t capacity =
         JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
         JSON_OBJECT_SIZE(14) + 650;
@@ -534,7 +535,7 @@ void checkpayment(String PAYID){
 
     deserializeJson(doc, line);
 
-    String data_statuss = doc["data"]["status"]; 
+    String data_statuss = doc["data"]["status"];
     data_status = data_statuss;
     Serial.println(data_status);
 }
