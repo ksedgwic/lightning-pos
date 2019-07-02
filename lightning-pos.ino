@@ -89,7 +89,7 @@ Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 char maxdig[20];
 
 long sats = 0;
-int preset = 3;
+int preset = -1;
 
 void displayText(int col, int row, String txt) {
     display.firstPage();
@@ -105,6 +105,27 @@ void displayText(int col, int row, String txt) {
     }
     while (display.nextPage());
 }    
+
+void displayMenu() {
+    display.firstPage();
+    do
+    {
+        display.setRotation(1);  
+        display.setPartialWindow(0, 0, 200, 200);
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeSansBold18pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(0, 40);
+        display.println(" Pay with");
+        display.println(" Lightning");
+        display.setFont(&FreeSansBold9pt7b);
+        for (int ndx = 0; ndx < 4; ++ndx) {
+            char but = 'A' + ndx;
+            display.printf("  %c - %s\n", but, presets[ndx].title.c_str());
+        }
+    }
+    while (display.nextPage());
+}
 
 void setup() {
     display.init(115200);
@@ -129,6 +150,24 @@ void setup() {
 }
 
 void loop() {
+    preset = -1;
+    displayMenu();
+    while (preset == -1) {
+        char key = keypad.getKey();
+        switch (key) {
+        case NO_KEY:
+            break;
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+            preset = key - 'A';
+            break;
+        default:
+            break;
+        }
+    }
+    
     memset(maxdig, 0, 20);
     int counta = 0;
 
@@ -242,6 +281,7 @@ int applyPreset() {
 void keypadamount() {
     // Refresh the exchange rate.
     ONprice();
+    applyPreset();
     displayAmountPage();
     showPartialUpdate(maxdig);
     int checker = 0;
@@ -262,7 +302,7 @@ void keypadamount() {
         case 'C':
         case 'D':
             preset = key - 'A';
-            applyPreset();
+            checker = applyPreset();
             break;
         default:
             maxdig[checker] = key;
