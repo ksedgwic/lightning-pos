@@ -43,6 +43,7 @@ const char* host = "api.opennode.co";
 const int httpsPort = 443;
 String hints = "false"; 
 String price;
+unsigned long price_tstamp = 0;
 
 String data_lightning_invoice_payreq = "";
 String data_status = "unpaid";
@@ -168,7 +169,7 @@ void setup() {
     
     pinMode(19, OUTPUT);
 
-    ONprice();
+    check_price();
 }
 
 void loop() {
@@ -303,10 +304,8 @@ int applyPreset() {
 //Function for keypad
 bool keypadamount() {
     // Refresh the exchange rate.
-    ONprice();
+    check_price();
     applyPreset();
-    displayAmountPage();
-    showPartialUpdate(keybuf);
     int checker = 0;
     while (checker < sizeof(keybuf)) {
         char key = keypad.getKey();
@@ -420,39 +419,47 @@ void showPartialUpdate(String centsStr) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-void ONprice() {
-    displayText(10, 100, "Updating " + on_currency + " ...");
+void check_price() {
+    // Only check the price if it is older than 10 minutes.
+    unsigned long now = millis();
+    if (price_tstamp == 0 ||	/* first time */
+        now < price_tstamp ||	/* wraps after 50 days */
+        now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
     
-    WiFiClientSecure client;
+        displayText(10, 100, "Updating " + on_currency + " ...");
+    
+        WiFiClientSecure client;
 
-    if (!client.connect(host, httpsPort)) {
-        return;
-    }
-
-    String url = "/v1/rates";
-
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "User-Agent: ESP32\r\n" +
-                 "Connection: close\r\n\r\n");
-
-    while (client.connected()) {
-        String line = client.readStringUntil('\n');
-        if (line == "\r") {
-            break;
+        if (!client.connect(host, httpsPort)) {
+            return;
         }
-    }
-    String line = client.readStringUntil('\n');
+
+        String url = "/v1/rates";
+
+        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                     "Host: " + host + "\r\n" +
+                     "User-Agent: ESP32\r\n" +
+                     "Connection: close\r\n\r\n");
+
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") {
+                break;
+            }
+        }
+        String line = client.readStringUntil('\n');
   
-    const size_t capacity =
-        169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
-    DynamicJsonDocument doc(capacity);
+        const size_t capacity =
+            169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
+        DynamicJsonDocument doc(capacity);
 
-    deserializeJson(doc, line);
+        deserializeJson(doc, line);
 
-    String temp = doc["data"][on_currency][on_currency.substring(3)]; 
-    price = temp;
-    Serial.println(price);
+        String temp = doc["data"][on_currency][on_currency.substring(3)]; 
+        price = temp;
+        price_tstamp = now;
+        Serial.println(price);
+    }
 }
 
 void fetchpayment(long sats){
