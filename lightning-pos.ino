@@ -25,6 +25,11 @@
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 
+struct wifi_conf_t {
+    String ssid;
+    String pass;
+};
+
 struct preset_t {
     String title;
     float price;
@@ -134,16 +139,34 @@ void setup() {
   
     Serial.begin(115200); 
            
-    displayText(20, 100, "Connecting ...");
-    
-    WiFi.begin(wifiSSID, wifiPASS);   
-    while (WiFi.status() != WL_CONNECTED) {
-        Serial.println("connecting");
-        delay(100);
-    }
-     
-    Serial.println("connected");
+    int nconfs = sizeof(wifi_confs) / sizeof(wifi_conf_t);
+    Serial.printf("scanning %d wifi confs\n", nconfs);
+    int ndx = 0;
+    while (true) {
+        const char* ssid = wifi_confs[ndx].ssid.c_str();
+        const char* pass = wifi_confs[ndx].pass.c_str();
+        
+        Serial.printf("trying %s\n", ssid);
+        displayText(10, 100, String("Trying ") + ssid);
 
+        WiFi.begin(ssid, pass);
+
+        // Poll the status for a while.
+        for (int nn = 0; nn < 20; ++nn) {
+            if (WiFi.status() == WL_CONNECTED)
+                goto Connected;
+            delay(100);
+        }
+
+        // Try the next access point.
+        if (++ndx == nconfs) {
+            ndx = 0;
+        }
+    }
+
+ Connected:        
+    Serial.println("connected");
+    
     pinMode(19, OUTPUT);
 
     ONprice();
