@@ -43,7 +43,6 @@ String price;
 String data_lightning_invoice_payreq = "";
 String data_status = "unpaid";
 String data_id = "";
-int counta = 0;
 
 //Set other Arduino Strings used
 String setoffour = "";
@@ -179,7 +178,7 @@ void loop() {
     while (display.nextPage());
  
     checkpayment(data_id);
-    while (counta < 60) {
+    while (counta < 40) {
         if (data_status == "unpaid") {
             delay(1000);
             checkpayment(data_id);
@@ -192,7 +191,7 @@ void loop() {
             delay(8000);
             digitalWrite(19, LOW);
             delay(500);
-            counta = 60;
+            counta = 40;
         }  
     }
     counta = 0;
@@ -244,6 +243,7 @@ void keypadamount() {
     // Refresh the exchange rate.
     ONprice();
     displayAmountPage();
+    showPartialUpdate(maxdig);
     int checker = 0;
     while (checker < 20) {
         char key = keypad.getKey();
