@@ -41,7 +41,6 @@ GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*
 
 const char* host = "api.opennode.co";
 const int httpsPort = 443;
-String amount = ""; 
 String hints = "false"; 
 String price;
 
@@ -91,7 +90,7 @@ char keys[rows][cols] = {
 byte rowPins[rows] = {13, 12, 14, 27};
 byte colPins[cols] = {26, 25, 33, 32};
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
-char maxdig[20];
+char keybuf[20];
 
 long sats = 0;
 int preset = -1;
@@ -191,14 +190,13 @@ void loop() {
         }
     }
     
-    memset(maxdig, 0, 20);
+    memset(keybuf, 0, sizeof(keybuf));
     int counta = 0;
 
     hexvalues = "";
 
-    while (*maxdig == 0) {
+    while (*keybuf == 0) {
         keypadamount();
-        amount = String(maxdig);
     }
 
     fetchpayment(sats);
@@ -292,11 +290,12 @@ void qrmmaker(String xxx){
 }
 
 int applyPreset() {
-    String centstr = String(presets[preset].price * 100);
-    memset(maxdig, 0, 20);
-    memcpy(maxdig, centstr.c_str(), centstr.length());
+    String centstr = String(long(presets[preset].price * 100));
+    memset(keybuf, 0, sizeof(keybuf));
+    memcpy(keybuf, centstr.c_str(), centstr.length());
+    Serial.printf("applyPreset %d keybuf=%s\n", preset, keybuf);
     displayAmountPage();
-    showPartialUpdate(maxdig);
+    showPartialUpdate(keybuf);
     return centstr.length();
 }
 
@@ -306,16 +305,15 @@ void keypadamount() {
     ONprice();
     applyPreset();
     displayAmountPage();
-    showPartialUpdate(maxdig);
+    showPartialUpdate(keybuf);
     int checker = 0;
-    while (checker < 20) {
+    while (checker < sizeof(keybuf)) {
         char key = keypad.getKey();
         switch (key) {
         case NO_KEY:
             break;
         case '#':
             displayText(20, 100, "Processing ...");
-            Serial.println("Finished");
             return;
         case '*':
             checker = applyPreset();
@@ -328,10 +326,10 @@ void keypadamount() {
             checker = applyPreset();
             break;
         default:
-            maxdig[checker] = key;
+            keybuf[checker] = key;
             checker++;
-            Serial.println(maxdig);
-            showPartialUpdate(maxdig);
+            Serial.printf("keybuf=%s\n", keybuf);
+            showPartialUpdate(keybuf);
             break;
         }
     }
