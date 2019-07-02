@@ -44,7 +44,7 @@ GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*
 // OpenNode config
 const char* host = "api.opennode.co";
 const int httpsPort = 443;
-String hints = "false";
+String hints = "true";
 
 // fiat/btc price
 String price;
@@ -244,8 +244,21 @@ void loop() {
         }
         else
         {
-            displayText(10, 100, "Success! Thank You");
-
+            // Display big success message.
+            display.firstPage();
+            do
+            {
+                display.setRotation(1);
+                display.setPartialWindow(0, 0, 200, 200);
+                display.fillScreen(GxEPD_WHITE);
+                display.setFont(&FreeSansBold18pt7b);
+                display.setTextColor(GxEPD_BLACK);
+                display.setCursor(0, 80);
+                display.println(" Success!");
+                display.println("Thank you!");
+            }
+            while (display.nextPage());
+            
             digitalWrite(19, HIGH);
             delay(8000);
             digitalWrite(19, LOW);
