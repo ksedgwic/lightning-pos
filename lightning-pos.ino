@@ -1,6 +1,8 @@
+// Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
+
 /**
- *  Flux Capacitor PoS Terminal - a point of sale terminal which can accept bitcoin via lightning network
- *  
+ *  Flux Capacitor PoS Terminal - a point of sale terminal which can
+ *  accept bitcoin via lightning network
  *
  *  Epaper PIN MAP: [VCC - 3.3V, GND - GND, SDI - GPIO23, SCLK - GPIO18, 
  *                   CS - GPIO5, D/C - GPIO17, Reset - GPIO16, Busy - GPIO4]
@@ -39,9 +41,12 @@ struct preset_t {
 
 GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4));
 
+// OpenNode config
 const char* host = "api.opennode.co";
 const int httpsPort = 443;
-String hints = "false"; 
+String hints = "false";
+
+// fiat/btc price
 String price;
 unsigned long price_tstamp = 0;
 
@@ -51,24 +56,9 @@ String data_id = "";
 
 //Set other Arduino Strings used
 String setoffour = "";
-String right = "";
-String third = "";
-String fourth = "";
-String tempfourhex = "";
-String line = "";
-String line2 = "";
-String doublelines = "";
-String finalhex = "";
+String qrline = "";
 String hexvalues = "";
 String result = "";
-String PAYMENT = ""; 
-String PAYMENTPAID = "true"; 
-String response;
-
-//Buffers for Arduino String conversions
-char fourbuf[5];
-char fourbuff[5];
-int tamp = 0;
 
 //Char for holding the QR byte array
 unsigned char PROGMEM singlehex[4209];
@@ -126,7 +116,7 @@ void displayMenu() {
         display.setFont(&FreeSansBold9pt7b);
         for (int ndx = 0; ndx < 4; ++ndx) {
             char but = 'A' + ndx;
-            display.printf("  %c - %s\n", but, presets[ndx].title.c_str());
+            display.printf("  %c - %s\n", but, c_presets[ndx].title.c_str());
         }
     }
     while (display.nextPage());
@@ -139,12 +129,12 @@ void setup() {
   
     Serial.begin(115200); 
            
-    int nconfs = sizeof(wifi_confs) / sizeof(wifi_conf_t);
+    int nconfs = sizeof(c_wifi_confs) / sizeof(wifi_conf_t);
     Serial.printf("scanning %d wifi confs\n", nconfs);
     int ndx = 0;
     while (true) {
-        const char* ssid = wifi_confs[ndx].ssid.c_str();
-        const char* pass = wifi_confs[ndx].pass.c_str();
+        const char* ssid = c_wifi_confs[ndx].ssid.c_str();
+        const char* pass = c_wifi_confs[ndx].pass.c_str();
         
         Serial.printf("trying %s\n", ssid);
         displayText(10, 100, String("Trying ") + ssid);
@@ -205,9 +195,9 @@ void loop() {
 
     qrmmaker(data_lightning_invoice_payreq);
 
-    for (int i = 0;  i < line.length(); i+=4) {      
+    for (int i = 0;  i < qrline.length(); i+=4) {      
         int tmp = i; 
-        setoffour = line.substring(tmp, tmp+4); 
+        setoffour = qrline.substring(tmp, tmp+4); 
        
         for (int z = 0; z < 16; z++){
             if (setoffour == ref[0][z]){
@@ -216,7 +206,7 @@ void loop() {
         }
     }
 
-    line = "";
+    qrline = "";
 
     //for loop to build the epaper friendly char singlehex byte array
     //image of the QR
@@ -277,28 +267,28 @@ void qrmmaker(String xxx){
 
     int une = 0;
     
-    line = "";
+    qrline = "";
 
     for (uint8_t y = 0; y < qrcode.size; y++) {
 
         // Each horizontal module
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        line += "1";
+        qrline += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        line += "1";
+        qrline += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            line += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        line += "1";    
+        qrline += "1";    
     }
 }
 
 int applyPreset() {
-    String centstr = String(long(presets[preset].price * 100));
+    String centstr = String(long(c_presets[preset].price * 100));
     memset(keybuf, 0, sizeof(keybuf));
     memcpy(keybuf, centstr.c_str(), centstr.length());
     Serial.printf("applyPreset %d keybuf=%s\n", preset, keybuf);
@@ -322,7 +312,7 @@ bool keypadamount() {
             displayText(20, 100, "Processing ...");
             return true;
         case '*':
-            if (presets[preset].price != 0.00) {
+            if (c_presets[preset].price != 0.00) {
                 // Pressing '*' with preset value returns to main menu.
                 return false;
             } else {
@@ -360,20 +350,20 @@ void displayAmountPage() {
         display.setTextColor(GxEPD_BLACK);
 
         display.setCursor(0, 20);
-        display.println(" " + presets[preset].title);
+        display.println(" " + c_presets[preset].title);
 
         display.setCursor(0, 60);
-        if (presets[preset].price == 0.00) {
+        if (c_presets[preset].price == 0.00) {
             display.println(" Enter Amount");
         } else {
             display.println();
         }
-        display.println(" " + on_currency.substring(3) + ": ");
+        display.println(" " + c_currency.substring(3) + ": ");
         display.println(" Sats: ");
 
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(0, 160);
-        if (presets[preset].price == 0.00) {
+        if (c_presets[preset].price == 0.00) {
             display.println("   Press * to clear");
         } else {
             display.println("   Press * to cancel");
@@ -432,7 +422,7 @@ void check_price() {
         now < price_tstamp ||	/* wraps after 50 days */
         now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
     
-        displayText(10, 100, "Updating " + on_currency + " ...");
+        displayText(10, 100, "Updating " + c_currency + " ...");
     
         WiFiClientSecure client;
 
@@ -461,7 +451,7 @@ void check_price() {
 
         deserializeJson(doc, line);
 
-        String temp = doc["data"][on_currency][on_currency.substring(3)]; 
+        String temp = doc["data"][c_currency][c_currency.substring(3)]; 
         price = temp;
         price_tstamp = now;
         Serial.println(price);
@@ -478,14 +468,14 @@ void fetchpayment(long sats){
     String SATSAMOUNT = String(sats);
     String topost =
         "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
-        prefix + presets[preset].title + "\", \"route_hints\": \"" +
+        c_prefix + c_presets[preset].title + "\", \"route_hints\": \"" +
         hints + "\"}";
     String url = "/v1/charges";
 
     client.print(String("POST ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "User-Agent: ESP32\r\n" +
-                 "Authorization: " + apikey + "\r\n" +
+                 "Authorization: " + c_apikey + "\r\n" +
                  "Content-Type: application/json\r\n" +
                  "Connection: close\r\n" +
                  "Content-Length: " + topost.length() + "\r\n" +
@@ -525,7 +515,7 @@ void checkpayment(String PAYID){
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
-                 "Authorization: " + apikey + "\r\n" +
+                 "Authorization: " + c_apikey + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Connection: close\r\n\r\n");
 

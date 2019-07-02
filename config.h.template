@@ -3,7 +3,7 @@
 // List WIFI SSID and password pairs, terminal will loop until it
 // finds one that works.
 //
-wifi_conf_t wifi_confs[] = {
+wifi_conf_t c_wifi_confs[] = {
  { "MyFirstSSID",		"somepasswd" },
  { "AnotherSSID",		"something" },
  { "YetAnotherSSID",	"sesame" }
@@ -11,17 +11,17 @@ wifi_conf_t wifi_confs[] = {
 
 // Create an account at OpenNode, put the invoice API key here.
 //
-String apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
-String on_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
+String c_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
+String c_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
 
 // The prefix is appended to the lightning item description.
 //
-String prefix = "Starfish: ";
+String c_prefix = "Starfish: ";
 
 // Define presets with prices for the 4 letter buttons.  A price of
 // 0.00 will prompt the user to enter a price on the keypad.
 //
-preset_t presets[] = {
+preset_t c_presets[] = {
  { "Item 1", 		 4.00 },
  { "Item 2",		10.00 },
  { "Item 3",		50.00 },
