@@ -65,9 +65,10 @@ String hints = "true";
 String price;
 unsigned long price_tstamp = 0;
 
-String data_lightning_invoice_payreq = "";
-String data_status = "unpaid";
-String data_id = "";
+struct payreq_t {
+    String id;
+    String invoice;
+};
 
 //Set other Arduino Strings used
 String setoffour = "";
@@ -206,9 +207,12 @@ void loop() {
         return;
     }
 
-    fetchpayment(sats);
+    payreq_t payreq = fetchpayment(sats);
+    if (payreq.id == "") {
+        return;
+    }
 
-    qrmmaker(data_lightning_invoice_payreq);
+    qrmmaker(payreq.invoice);
 
     for (int i = 0;  i < qrline.length(); i+=4) {
         int tmp = i;
@@ -244,9 +248,9 @@ void loop() {
     }
     while (display.nextPage());
 
-    checkpayment(data_id);
+    bool ispaid = checkpayment(payreq.id);
     while (counta < 40) {
-        if (data_status == "unpaid") {
+        if (!ispaid) {
             // Delay for 1 second, checking for abort.
             for (int nn = 0; nn < 1000; ++nn) {
                 if (keypad.getKey() == '*') {
@@ -254,7 +258,7 @@ void loop() {
                 }
                 delay(1);
             }
-            checkpayment(data_id);
+            ispaid = checkpayment(payreq.id);
             counta++;
         }
         else
@@ -451,6 +455,7 @@ void check_price() {
         now < price_tstamp ||	/* wraps after 50 days */
         now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
 
+        Serial.printf("updating %s price\n", cfg_currency.c_str());
         displayText(10, 100, "Updating " + cfg_currency + " ...");
 
         WiFiClientSecure client;
@@ -483,15 +488,16 @@ void check_price() {
         String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
         price = temp;
         price_tstamp = now;
-        Serial.println(price);
+        Serial.printf("1 BTC = %s %s\n",
+                      price.c_str(), cfg_currency.substring(3).c_str());
     }
 }
 
-void fetchpayment(long sats){
+payreq_t fetchpayment(long sats){
     WiFiClientSecure client;
 
     if (!client.connect(host, httpsPort)) {
-        return;
+        return { "", "" };
     }
 
     String SATSAMOUNT = String(sats);
@@ -525,19 +531,16 @@ void fetchpayment(long sats){
 
     deserializeJson(doc, line);
 
-    String data_idd = doc["data"]["id"];
-    data_id = data_idd;
-    String data_lightning_invoice_payreqq =
-        doc["data"]["lightning_invoice"]["payreq"];
-    data_lightning_invoice_payreq = data_lightning_invoice_payreqq;
+    return { doc["data"]["id"], doc["data"]["lightning_invoice"]["payreq"] };
 }
 
-void checkpayment(String PAYID){
+// Check the status of the payment, return true if it has been paid.
+bool checkpayment(String PAYID){
 
     WiFiClientSecure client;
 
     if (!client.connect(host, httpsPort)) {
-        return;
+        return false;
     }
 
     String url = "/v1/charge/" + PAYID;
@@ -563,7 +566,7 @@ void checkpayment(String PAYID){
 
     deserializeJson(doc, line);
 
-    String data_statuss = doc["data"]["status"];
-    data_status = data_statuss;
-    Serial.println(data_status);
+    String stat = doc["data"]["status"];
+    Serial.println(stat);
+    return stat == "paid";
 }
