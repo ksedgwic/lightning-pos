@@ -4,12 +4,27 @@
  *  Flux Capacitor PoS Terminal - a point of sale terminal which can
  *  accept bitcoin via lightning network
  *
- *  Epaper PIN MAP: [VCC - 3.3V, GND - GND, SDI - GPIO23, SCLK - GPIO18,
- *                   CS - GPIO5, D/C - GPIO17, Reset - GPIO16, Busy - GPIO4]
+ *  Epaper PIN MAP: [
+ *      VCC - 3.3V
+ *      GND - GND
+ *      SDI - GPIO23
+ *     SCLK - GPIO18,
+ *       CS - GPIO5
+ *      D/C - GPIO17
+ *    Reset - GPIO16
+ *     Busy - GPIO4
+ *  ]
  *
- *  Keypad Matrix PIN MAP: [Pin8 - GPIO13 -> Pin1 - GPIO32]
+ *  Keypad Matrix PIN MAP: [
+ *     Pin8 - GPIO13
+ *     .............
+ *     Pin1 - GPIO32
+ *  ]
  *
- *  LED PIN MAP: [POS (long leg) - GPIO15, NEG (short leg) - GND]
+ *  LED PIN MAP: [
+ *    POS (long leg)  - GPIO15
+ *    NEG (short leg) - GND
+ *  ]
  *
  */
 
