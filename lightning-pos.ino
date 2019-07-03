@@ -116,7 +116,7 @@ void displayMenu() {
         display.setFont(&FreeSansBold9pt7b);
         for (int ndx = 0; ndx < 4; ++ndx) {
             char but = 'A' + ndx;
-            display.printf("  %c - %s\n", but, c_presets[ndx].title.c_str());
+            display.printf("  %c - %s\n", but, cfg_presets[ndx].title.c_str());
         }
     }
     while (display.nextPage());
@@ -129,12 +129,12 @@ void setup() {
 
     Serial.begin(115200);
 
-    int nconfs = sizeof(c_wifi_confs) / sizeof(wifi_conf_t);
+    int nconfs = sizeof(cfg_wifi_confs) / sizeof(wifi_conf_t);
     Serial.printf("scanning %d wifi confs\n", nconfs);
     int ndx = 0;
     while (true) {
-        const char* ssid = c_wifi_confs[ndx].ssid.c_str();
-        const char* pass = c_wifi_confs[ndx].pass.c_str();
+        const char* ssid = cfg_wifi_confs[ndx].ssid.c_str();
+        const char* pass = cfg_wifi_confs[ndx].pass.c_str();
 
         Serial.printf("trying %s\n", ssid);
         displayText(10, 100, String("Trying ") + ssid);
@@ -302,7 +302,7 @@ void qrmmaker(String xxx){
 }
 
 int applyPreset() {
-    String centstr = String(long(c_presets[preset].price * 100));
+    String centstr = String(long(cfg_presets[preset].price * 100));
     memset(keybuf, 0, sizeof(keybuf));
     memcpy(keybuf, centstr.c_str(), centstr.length());
     Serial.printf("applyPreset %d keybuf=%s\n", preset, keybuf);
@@ -326,7 +326,7 @@ bool keypadamount() {
             displayText(20, 100, "Processing ...");
             return true;
         case '*':
-            if (c_presets[preset].price != 0.00) {
+            if (cfg_presets[preset].price != 0.00) {
                 // Pressing '*' with preset value returns to main menu.
                 return false;
             } else {
@@ -364,20 +364,20 @@ void displayAmountPage() {
         display.setTextColor(GxEPD_BLACK);
 
         display.setCursor(0, 20);
-        display.println(" " + c_presets[preset].title);
+        display.println(" " + cfg_presets[preset].title);
 
         display.setCursor(0, 60);
-        if (c_presets[preset].price == 0.00) {
+        if (cfg_presets[preset].price == 0.00) {
             display.println(" Enter Amount");
         } else {
             display.println();
         }
-        display.println(" " + c_currency.substring(3) + ": ");
+        display.println(" " + cfg_currency.substring(3) + ": ");
         display.println(" Sats: ");
 
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(0, 160);
-        if (c_presets[preset].price == 0.00) {
+        if (cfg_presets[preset].price == 0.00) {
             display.println("   Press * to clear");
         } else {
             display.println("   Press * to cancel");
@@ -436,7 +436,7 @@ void check_price() {
         now < price_tstamp ||	/* wraps after 50 days */
         now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
 
-        displayText(10, 100, "Updating " + c_currency + " ...");
+        displayText(10, 100, "Updating " + cfg_currency + " ...");
 
         WiFiClientSecure client;
 
@@ -465,7 +465,7 @@ void check_price() {
 
         deserializeJson(doc, line);
 
-        String temp = doc["data"][c_currency][c_currency.substring(3)];
+        String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
         price = temp;
         price_tstamp = now;
         Serial.println(price);
@@ -482,14 +482,14 @@ void fetchpayment(long sats){
     String SATSAMOUNT = String(sats);
     String topost =
         "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
-        c_prefix + c_presets[preset].title + "\", \"route_hints\": \"" +
+        cfg_prefix + cfg_presets[preset].title + "\", \"route_hints\": \"" +
         hints + "\"}";
     String url = "/v1/charges";
 
     client.print(String("POST ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "User-Agent: ESP32\r\n" +
-                 "Authorization: " + c_apikey + "\r\n" +
+                 "Authorization: " + cfg_apikey + "\r\n" +
                  "Content-Type: application/json\r\n" +
                  "Connection: close\r\n" +
                  "Content-Length: " + topost.length() + "\r\n" +
@@ -529,7 +529,7 @@ void checkpayment(String PAYID){
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
-                 "Authorization: " + c_apikey + "\r\n" +
+                 "Authorization: " + cfg_apikey + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Connection: close\r\n\r\n");
 

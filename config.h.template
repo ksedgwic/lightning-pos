@@ -1,9 +1,9 @@
 // Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
 
-// List WIFI SSID and password pairs, terminal will loop until it
-// finds one that works.
+// List WIFI SSID and password pairs, terminal will loop forever until
+// it finds one that works.
 //
-wifi_conf_t c_wifi_confs[] = {
+wifi_conf_t cfg_wifi_confs[] = {
  { "MyFirstSSID",		"somepasswd" },
  { "AnotherSSID",		"something" },
  { "YetAnotherSSID",	"sesame" }
@@ -11,17 +11,18 @@ wifi_conf_t c_wifi_confs[] = {
 
 // Create an account at OpenNode, put the invoice API key here.
 //
-String c_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
-String c_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
+String cfg_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
+String cfg_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
 
-// The prefix is appended to the lightning item description.
+// The prefix is prepended to the lightning item description.
 //
-String c_prefix = "Starfish: ";
+String cfg_prefix = "Acme: ";
 
-// Define presets with prices for the 4 letter buttons.  A price of
-// 0.00 will prompt the user to enter a price on the keypad.
+// Define presets with prices for the 4 letter buttons.  An item with
+// a price of 0.00 will prompt the user to enter a price on the
+// keypad.
 //
-preset_t c_presets[] = {
+preset_t cfg_presets[] = {
  { "Item 1", 		 4.00 },
  { "Item 2",		10.00 },
  { "Item 3",		50.00 },
