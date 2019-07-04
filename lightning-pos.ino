@@ -118,7 +118,7 @@ void setup() {
             delay(100);
         }
 
-        // Try the next access point.
+        // Try the next access point, wrap.
         if (++ndx == nconfs) {
             ndx = 0;
         }
@@ -152,13 +152,11 @@ void loop() {
     }
 
     memset(g_keybuf, 0, sizeof(g_keybuf));
-    int counta = 0;
 
-    // If no amount is selected, return to main menu.
+    // Collect amount, if none return to main menu.
     if (!keypadamount()) {
         return;
     }
-    
     Serial.printf("pay %d %lu\n", g_preset, g_sats);
 
     payreq_t payreq = fetchpayment();
@@ -170,44 +168,7 @@ void loop() {
         return;
     }
 
-    bool ispaid = checkpayment(payreq.id);
-    while (counta < 40) {
-        if (!ispaid) {
-            // Delay, checking for abort.
-            for (int nn = 0; nn < 200; ++nn) {
-                if (g_keypad.getKey() == '*') {
-                    return;
-                }
-                delay(10);
-            }
-            ispaid = checkpayment(payreq.id);
-            counta++;
-        }
-        else
-        {
-            // Display big success message.
-            g_display.firstPage();
-            do
-            {
-                g_display.setRotation(1);
-                g_display.setPartialWindow(0, 0, 200, 200);
-                g_display.fillScreen(GxEPD_WHITE);
-                g_display.setFont(&FreeSansBold18pt7b);
-                g_display.setTextColor(GxEPD_BLACK);
-                g_display.setCursor(0, 80);
-                g_display.println(" Success!");
-                g_display.println("Thank you!");
-            }
-            while (g_display.nextPage());
-            
-            digitalWrite(19, HIGH);
-            delay(8000);
-            digitalWrite(19, LOW);
-            delay(500);
-            counta = 40;
-        }
-    }
-    counta = 0;
+    waitForPayment(&payreq);
 }
 
 void displayText(int col, int row, String txt) {
@@ -235,7 +196,7 @@ void displayMenu() {
         g_display.fillScreen(GxEPD_WHITE);
         g_display.setFont(&FreeSansBold18pt7b);
         g_display.setTextColor(GxEPD_BLACK);
-        g_display.setCursor(0, 40);
+        g_display.setCursor(0, 37);
         g_display.println(" Pay with");
         g_display.println(" Lightning");
         g_display.setFont(&FreeSansBold9pt7b);
@@ -328,7 +289,7 @@ void displayAmountPage() {
         } else {
             g_display.println("   Press * to cancel");
         }
-        g_display.println("   Press # when done");
+        g_display.println("   Press # to submit");
 
     }
     while (g_display.nextPage());
@@ -467,6 +428,48 @@ bool displayQR(payreq_t * payreqp) {
     while (g_display.nextPage());
 
     return true;
+}
+
+// Handle outcome
+void waitForPayment(payreq_t * payreqp) {
+    int counta = 0;
+    bool ispaid = checkpayment(payreqp->id);
+    while (counta < 40) {
+        if (!ispaid) {
+            // Delay, checking for abort.
+            for (int nn = 0; nn < 200; ++nn) {
+                if (g_keypad.getKey() == '*') {
+                    return;
+                }
+                delay(10);
+            }
+            ispaid = checkpayment(payreqp->id);
+            counta++;
+        }
+        else
+        {
+            // Display big success message.
+            g_display.firstPage();
+            do
+            {
+                g_display.setRotation(1);
+                g_display.setPartialWindow(0, 0, 200, 200);
+                g_display.fillScreen(GxEPD_WHITE);
+                g_display.setFont(&FreeSansBold18pt7b);
+                g_display.setTextColor(GxEPD_BLACK);
+                g_display.setCursor(0, 80);
+                g_display.println(" Success!");
+                g_display.println("Thank you!");
+            }
+            while (g_display.nextPage());
+            
+            digitalWrite(19, HIGH);
+            delay(8000);
+            digitalWrite(19, LOW);
+            delay(500);
+            counta = 40;
+        }
+    }
 }
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
