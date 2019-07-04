@@ -76,15 +76,6 @@ String qrline = "";
 String hexvalues = "";
 String result = "";
 
-//Char for holding the QR byte array
-unsigned char PROGMEM singlehex[4209];
-
-//Char dictionary for conversion from 1s and 0s
-char ref[2][16][5]={
-{"0000","0001","0010","0011","0100","0101","0110","0111","1000","1001","1010","1011","1100","1101","1110","1111"},
-{"0",   "1",   "2",   "3",   "4",   "5",   "6",   "7",   "8",   "9",   "a",   "b",   "c",   "d",   "e",   "f"}
-};
-
 //Set keypad
 const byte rows = 4;
 const byte cols = 4;
@@ -417,8 +408,23 @@ void showPartialUpdate(String centsStr) {
     while (display.nextPage());
 }
     
+//Char for holding the QR byte array
+unsigned char PROGMEM singlehex[4209];
+
 // Display QRcode
 bool displayQR(payreq_t * payreqp) {
+    
+    //Char dictionary for conversion from 1s and 0s
+    const char ref[2][16][5]={
+        {
+         "0000","0001","0010","0011","0100","0101","0110","0111",
+         "1000","1001","1010","1011","1100","1101","1110","1111"
+        },
+        {
+         "0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"
+        }
+    };
+
     qrmmaker(payreqp->invoice);
 
     for (int i = 0;  i < qrline.length(); i+=4) {

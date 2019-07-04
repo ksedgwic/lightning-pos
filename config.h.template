@@ -23,8 +23,8 @@ String cfg_prefix = "Acme: ";
 // keypad.
 //
 preset_t cfg_presets[] = {
- { "Item 1", 		 4.00 },
- { "Item 2",		10.00 },
- { "Item 3",		50.00 },
- { "Other Payment",	 0.00 }
+ { "T-Shirt",		25.00 },
+ { "CD",			20.00 },
+ { "LP",		    10.00 },
+ { "Other",	 		 0.00 }
 };
