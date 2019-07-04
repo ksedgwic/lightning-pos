@@ -4,9 +4,9 @@
 // it finds one that works.
 //
 wifi_conf_t cfg_wifi_confs[] = {
- { "MyFirstSSID",		"somepasswd" },
- { "AnotherSSID",		"something" },
- { "YetAnotherSSID",	"sesame" }
+ { "MyFirstSSID",       "somepasswd" },
+ { "AnotherSSID",       "something" },
+ { "YetAnotherSSID",    "sesame" }
 };
 
 // Create an account at OpenNode, put the invoice API key here.
@@ -23,8 +23,8 @@ String cfg_prefix = "Acme: ";
 // keypad.
 //
 preset_t cfg_presets[] = {
- { "T-Shirt",		25.00 },
- { "CD",			20.00 },
- { "LP",		    10.00 },
- { "Other",	 		 0.00 }
+ { "T-Shirt",       25.00 },
+ { "CD",            20.00 },
+ { "LP",            10.00 },
+ { "Other",          0.00 }
 };
