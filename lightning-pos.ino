@@ -54,84 +54,46 @@ struct preset_t {
 
 #include "config.h"
 
-GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> display(GxEPD2_154(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4));
-
 // OpenNode config
-const char* host = "api.opennode.co";
-const int httpsPort = 443;
-String hints = "true";
+const char* g_host = "api.opennode.co";
+const int g_httpsPort = 443;
+String g_hints = "false";
 
 // fiat/btc price
-String price;
-unsigned long price_tstamp = 0;
+String g_ratestr;
+unsigned long g_ratestr_tstamp = 0;
 
 struct payreq_t {
     String id;
     String invoice;
 };
 
-//Set other Arduino Strings used
-String setoffour = "";
-String qrline = "";
-String hexvalues = "";
-String result = "";
-
 //Set keypad
-const byte rows = 4;
-const byte cols = 4;
-char keys[rows][cols] = {
+const byte rows_ = 4;
+const byte cols_ = 4;
+char keys_[rows_][cols_] = {
                          {'1','2','3','A'},
                          {'4','5','6','B'},
                          {'7','8','9','C'},
                          {'*','0','#','D'}
 };
-byte rowPins[rows] = {13, 12, 14, 27};
-byte colPins[cols] = {26, 25, 33, 32};
-Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
-char keybuf[20];
+byte rowPins_[rows_] = {13, 12, 14, 27};
+byte colPins_[cols_] = {26, 25, 33, 32};
+Keypad g_keypad = Keypad( makeKeymap(keys_), rowPins_, colPins_, rows_, cols_ );
 
-unsigned long sats;
-int preset = -1;
+GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> g_display(
+        GxEPD2_154(
+                   /*CS=5*/ SS,
+                   /*DC=*/ 17,
+                   /*RST=*/ 16,
+                   /*BUSY=*/ 4));
 
-void displayText(int col, int row, String txt) {
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.setPartialWindow(0, 0, 200, 200);
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeSansBold9pt7b);
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(col, row);
-        display.println(txt);
-    }
-    while (display.nextPage());
-}
-
-void displayMenu() {
-    Serial.printf("displayMenu\n");
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.setPartialWindow(0, 0, 200, 200);
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeSansBold18pt7b);
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(0, 40);
-        display.println(" Pay with");
-        display.println(" Lightning");
-        display.setFont(&FreeSansBold9pt7b);
-        for (int ndx = 0; ndx < 4; ++ndx) {
-            char but = 'A' + ndx;
-            display.printf("  %c - %s\n", but, cfg_presets[ndx].title.c_str());
-        }
-    }
-    while (display.nextPage());
-}
+char g_keybuf[20];
+unsigned long g_sats;
+int g_preset = -1;
 
 void setup() {
-    display.init(115200);
+    g_display.init(115200);
 
     displayText(20, 100, "Loading ...");
 
@@ -171,10 +133,10 @@ void setup() {
 }
 
 void loop() {
-    preset = -1;
+    g_preset = -1;
     displayMenu();
-    while (preset == -1) {
-        char key = keypad.getKey();
+    while (g_preset == -1) {
+        char key = g_keypad.getKey();
         switch (key) {
         case NO_KEY:
             break;
@@ -182,26 +144,24 @@ void loop() {
         case 'B':
         case 'C':
         case 'D':
-            preset = key - 'A';
+            g_preset = key - 'A';
             break;
         default:
             break;
         }
     }
 
-    memset(keybuf, 0, sizeof(keybuf));
+    memset(g_keybuf, 0, sizeof(g_keybuf));
     int counta = 0;
-
-    hexvalues = "";
 
     // If no amount is selected, return to main menu.
     if (!keypadamount()) {
         return;
     }
     
-    Serial.printf("pay %d %lu\n", preset, sats);
+    Serial.printf("pay %d %lu\n", g_preset, g_sats);
 
-    payreq_t payreq = fetchpayment(sats);
+    payreq_t payreq = fetchpayment();
     if (payreq.id == "") {
         return;
     }
@@ -215,7 +175,7 @@ void loop() {
         if (!ispaid) {
             // Delay, checking for abort.
             for (int nn = 0; nn < 200; ++nn) {
-                if (keypad.getKey() == '*') {
+                if (g_keypad.getKey() == '*') {
                     return;
                 }
                 delay(10);
@@ -226,19 +186,19 @@ void loop() {
         else
         {
             // Display big success message.
-            display.firstPage();
+            g_display.firstPage();
             do
             {
-                display.setRotation(1);
-                display.setPartialWindow(0, 0, 200, 200);
-                display.fillScreen(GxEPD_WHITE);
-                display.setFont(&FreeSansBold18pt7b);
-                display.setTextColor(GxEPD_BLACK);
-                display.setCursor(0, 80);
-                display.println(" Success!");
-                display.println("Thank you!");
+                g_display.setRotation(1);
+                g_display.setPartialWindow(0, 0, 200, 200);
+                g_display.fillScreen(GxEPD_WHITE);
+                g_display.setFont(&FreeSansBold18pt7b);
+                g_display.setTextColor(GxEPD_BLACK);
+                g_display.setCursor(0, 80);
+                g_display.println(" Success!");
+                g_display.println("Thank you!");
             }
-            while (display.nextPage());
+            while (g_display.nextPage());
             
             digitalWrite(19, HIGH);
             delay(8000);
@@ -249,6 +209,173 @@ void loop() {
     }
     counta = 0;
 }
+
+void displayText(int col, int row, String txt) {
+    g_display.firstPage();
+    do
+    {
+        g_display.setRotation(1);
+        g_display.setPartialWindow(0, 0, 200, 200);
+        g_display.fillScreen(GxEPD_WHITE);
+        g_display.setFont(&FreeSansBold9pt7b);
+        g_display.setTextColor(GxEPD_BLACK);
+        g_display.setCursor(col, row);
+        g_display.println(txt);
+    }
+    while (g_display.nextPage());
+}
+
+void displayMenu() {
+    Serial.printf("displayMenu\n");
+    g_display.firstPage();
+    do
+    {
+        g_display.setRotation(1);
+        g_display.setPartialWindow(0, 0, 200, 200);
+        g_display.fillScreen(GxEPD_WHITE);
+        g_display.setFont(&FreeSansBold18pt7b);
+        g_display.setTextColor(GxEPD_BLACK);
+        g_display.setCursor(0, 40);
+        g_display.println(" Pay with");
+        g_display.println(" Lightning");
+        g_display.setFont(&FreeSansBold9pt7b);
+        for (int ndx = 0; ndx < 4; ++ndx) {
+            char but = 'A' + ndx;
+            g_display.printf("  %c - %s\n", but, cfg_presets[ndx].title.c_str());
+        }
+    }
+    while (g_display.nextPage());
+}
+
+int applyPreset() {
+    String centstr = String(long(cfg_presets[g_preset].price * 100));
+    memset(g_keybuf, 0, sizeof(g_keybuf));
+    memcpy(g_keybuf, centstr.c_str(), centstr.length());
+    Serial.printf("applyPreset %d g_keybuf=%s\n", g_preset, g_keybuf);
+    displayAmountPage();
+    showPartialUpdate(g_keybuf);
+    return centstr.length();
+}
+
+//Function for keypad
+unsigned long keypadamount() {
+    // Refresh the exchange rate.
+    check_price();
+    applyPreset();
+    int checker = 0;
+    while (checker < sizeof(g_keybuf)) {
+        char key = g_keypad.getKey();
+        switch (key) {
+        case NO_KEY:
+            break;
+        case '#':
+            displayText(20, 100, "Processing ...");
+            return true;
+        case '*':
+            if (cfg_presets[g_preset].price != 0.00) {
+                // Pressing '*' with preset value returns to main menu.
+                return false;
+            } else {
+                // Otherwise clear value and stay on screen.
+                checker = applyPreset();
+                break;
+            }
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+            g_preset = key - 'A';
+            checker = applyPreset();
+            break;
+        default:
+            g_keybuf[checker] = key;
+            checker++;
+            Serial.printf("g_keybuf=%s\n", g_keybuf);
+            showPartialUpdate(g_keybuf);
+            break;
+        }
+    }
+    // Only get here when we overflow the g_keybuf.
+    return false;
+}
+
+void displayAmountPage() {
+    g_display.firstPage();
+    do
+    {
+        g_display.setRotation(1);
+        g_display.setPartialWindow(0, 0, 200, 200);
+        g_display.fillScreen(GxEPD_WHITE);
+        g_display.setFont(&FreeSansBold12pt7b);
+        g_display.setTextColor(GxEPD_BLACK);
+
+        g_display.setCursor(0, 20);
+        g_display.println(" " + cfg_presets[g_preset].title);
+
+        g_display.setCursor(0, 60);
+        if (cfg_presets[g_preset].price == 0.00) {
+            g_display.println(" Enter Amount");
+        } else {
+            g_display.println();
+        }
+        g_display.println(" " + cfg_currency.substring(3) + ": ");
+        g_display.println(" Sats: ");
+
+        g_display.setFont(&FreeSansBold9pt7b);
+        g_display.setCursor(0, 160);
+        if (cfg_presets[g_preset].price == 0.00) {
+            g_display.println("   Press * to clear");
+        } else {
+            g_display.println("   Press * to cancel");
+        }
+        g_display.println("   Press # when done");
+
+    }
+    while (g_display.nextPage());
+}
+
+// Display current amount
+void showPartialUpdate(String centsStr) {
+
+    float rate = g_ratestr.toFloat();
+
+    float fiat = centsStr.toFloat() / 100.0;
+    g_sats = long(fiat * 100e6 / rate);
+
+    g_display.firstPage();
+    do
+    {
+        g_display.setRotation(1);
+        g_display.setFont(&FreeSansBold12pt7b);
+        g_display.setTextColor(GxEPD_BLACK);
+
+        // g_display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+        g_display.setPartialWindow(70, 69, 120, 20);
+        g_display.setCursor(70, 89);
+        g_display.print(fiat);
+
+    }
+    while (g_display.nextPage());
+
+    g_display.firstPage();
+    do
+    {
+        g_display.setRotation(1);
+        g_display.setFont(&FreeSansBold12pt7b);
+        g_display.setTextColor(GxEPD_BLACK);
+
+        // g_display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+        g_display.setPartialWindow(70, 98, 120, 20);
+        g_display.setCursor(70, 118);
+        g_display.print(g_sats);
+
+    }
+    while (g_display.nextPage());
+}
+    
+//Set other Arduino Strings used
+String g_qrline = "";
+String g_hexvalues = "";
 
 // QR maker function
 void qrmmaker(String xxx){
@@ -262,158 +389,34 @@ void qrmmaker(String xxx){
 
     int une = 0;
 
-    qrline = "";
+    g_qrline = "";
 
     for (uint8_t y = 0; y < qrcode.size; y++) {
 
         // Each horizontal module
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        qrline += "1";
+        g_qrline += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        qrline += "1";
+        g_qrline += "1";
         for (uint8_t x = 0; x < qrcode.size; x++) {
-            qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
+            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
         }
-        qrline += "1";
+        g_qrline += "1";
     }
 }
 
-int applyPreset() {
-    String centstr = String(long(cfg_presets[preset].price * 100));
-    memset(keybuf, 0, sizeof(keybuf));
-    memcpy(keybuf, centstr.c_str(), centstr.length());
-    Serial.printf("applyPreset %d keybuf=%s\n", preset, keybuf);
-    displayAmountPage();
-    showPartialUpdate(keybuf);
-    return centstr.length();
-}
-
-//Function for keypad
-unsigned long keypadamount() {
-    // Refresh the exchange rate.
-    check_price();
-    applyPreset();
-    int checker = 0;
-    while (checker < sizeof(keybuf)) {
-        char key = keypad.getKey();
-        switch (key) {
-        case NO_KEY:
-            break;
-        case '#':
-            displayText(20, 100, "Processing ...");
-            return true;
-        case '*':
-            if (cfg_presets[preset].price != 0.00) {
-                // Pressing '*' with preset value returns to main menu.
-                return false;
-            } else {
-                // Otherwise clear value and stay on screen.
-                checker = applyPreset();
-                break;
-            }
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-            preset = key - 'A';
-            checker = applyPreset();
-            break;
-        default:
-            keybuf[checker] = key;
-            checker++;
-            Serial.printf("keybuf=%s\n", keybuf);
-            showPartialUpdate(keybuf);
-            break;
-        }
-    }
-    // Only get here when we overflow the keybuf.
-    return false;
-}
-
-void displayAmountPage() {
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.setPartialWindow(0, 0, 200, 200);
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeSansBold12pt7b);
-        display.setTextColor(GxEPD_BLACK);
-
-        display.setCursor(0, 20);
-        display.println(" " + cfg_presets[preset].title);
-
-        display.setCursor(0, 60);
-        if (cfg_presets[preset].price == 0.00) {
-            display.println(" Enter Amount");
-        } else {
-            display.println();
-        }
-        display.println(" " + cfg_currency.substring(3) + ": ");
-        display.println(" Sats: ");
-
-        display.setFont(&FreeSansBold9pt7b);
-        display.setCursor(0, 160);
-        if (cfg_presets[preset].price == 0.00) {
-            display.println("   Press * to clear");
-        } else {
-            display.println("   Press * to cancel");
-        }
-        display.println("   Press # when done");
-
-    }
-    while (display.nextPage());
-}
-
-// Display current amount
-void showPartialUpdate(String centsStr) {
-
-    float rate = price.toFloat();
-
-    float fiat = centsStr.toFloat() / 100.0;
-    sats = long(fiat * 100e6 / rate);
-
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.setFont(&FreeSansBold12pt7b);
-        display.setTextColor(GxEPD_BLACK);
-
-        // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        display.setPartialWindow(70, 69, 120, 20);
-        display.setCursor(70, 89);
-        display.print(fiat);
-
-    }
-    while (display.nextPage());
-
-    display.firstPage();
-    do
-    {
-        display.setRotation(1);
-        display.setFont(&FreeSansBold12pt7b);
-        display.setTextColor(GxEPD_BLACK);
-
-        // display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        display.setPartialWindow(70, 98, 120, 20);
-        display.setCursor(70, 118);
-        display.print(sats);
-
-    }
-    while (display.nextPage());
-}
-    
 //Char for holding the QR byte array
-unsigned char PROGMEM singlehex[4209];
+unsigned char PROGMEM g_singlehex[4209];
 
 // Display QRcode
 bool displayQR(payreq_t * payreqp) {
-    
+    String setoffour = "";
+    String result = "";
+ 
     //Char dictionary for conversion from 1s and 0s
     const char ref[2][16][5]={
         {
@@ -425,41 +428,43 @@ bool displayQR(payreq_t * payreqp) {
         }
     };
 
+    g_hexvalues = "";
+
     qrmmaker(payreqp->invoice);
 
-    for (int i = 0;  i < qrline.length(); i+=4) {
+    for (int i = 0;  i < g_qrline.length(); i+=4) {
         int tmp = i;
-        setoffour = qrline.substring(tmp, tmp+4);
+        setoffour = g_qrline.substring(tmp, tmp+4);
 
         for (int z = 0; z < 16; z++){
             if (setoffour == ref[0][z]){
-                hexvalues += ref[1][z];
+                g_hexvalues += ref[1][z];
             }
         }
     }
 
-    qrline = "";
+    g_qrline = "";
 
     //for loop to build the epaper friendly char singlehex byte array
     //image of the QR
     for (int i = 0;  i < 4209; i++) {
         int tmp = i;
         int pmt = tmp*2;
-        result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
-        singlehex[tmp] =
-            (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(),
+        result = "0x" + g_hexvalues.substring(pmt, pmt+2) + ",";
+        g_singlehex[tmp] =
+            (unsigned char)strtol(g_hexvalues.substring(pmt, pmt+2).c_str(),
                                   NULL, 16);
     }
 
-    display.firstPage();
+    g_display.firstPage();
     do
     {
-        display.setPartialWindow(0, 0, 200, 200);
-        display.fillScreen(GxEPD_WHITE);
-        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK);
+        g_display.setPartialWindow(0, 0, 200, 200);
+        g_display.fillScreen(GxEPD_WHITE);
+        g_display.drawBitmap( 7, 7, g_singlehex, 184, 183, GxEPD_BLACK);
 
     }
-    while (display.nextPage());
+    while (g_display.nextPage());
 
     return true;
 }
@@ -467,25 +472,25 @@ bool displayQR(payreq_t * payreqp) {
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
 void check_price() {
-    // Only check the price if it is older than 10 minutes.
+    // Only check the g_ratestr if it is older than 10 minutes.
     unsigned long now = millis();
-    if (price_tstamp == 0 ||	/* first time */
-        now < price_tstamp ||	/* wraps after 50 days */
-        now - price_tstamp > (10 * 60 * 1000) /* 10 min old */) {
+    if (g_ratestr_tstamp == 0 ||	/* first time */
+        now < g_ratestr_tstamp ||	/* wraps after 50 days */
+        now - g_ratestr_tstamp > (10 * 60 * 1000) /* 10 min old */) {
 
-        Serial.printf("updating %s price\n", cfg_currency.c_str());
+        Serial.printf("updating %s g_ratestr\n", cfg_currency.c_str());
         displayText(10, 100, "Updating " + cfg_currency + " ...");
 
         WiFiClientSecure client;
 
-        if (!client.connect(host, httpsPort)) {
+        if (!client.connect(g_host, g_httpsPort)) {
             return;
         }
 
         String url = "/v1/rates";
 
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
+                     "Host: " + g_host + "\r\n" +
                      "User-Agent: ESP32\r\n" +
                      "Connection: close\r\n\r\n");
 
@@ -504,32 +509,32 @@ void check_price() {
         deserializeJson(doc, line);
 
         String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
-        price = temp;
-        price_tstamp = now;
+        g_ratestr = temp;
+        g_ratestr_tstamp = now;
         Serial.printf("1 BTC = %s %s\n",
-                      price.c_str(), cfg_currency.substring(3).c_str());
+                      g_ratestr.c_str(), cfg_currency.substring(3).c_str());
     }
 }
 
-payreq_t fetchpayment(unsigned long sats){
+payreq_t fetchpayment(){
     WiFiClientSecure client;
 
-    Serial.printf("fetchpayment %lu\n", sats);
+    Serial.printf("fetchpayment %lu\n", g_sats);
     
-    if (!client.connect(host, httpsPort)) {
+    if (!client.connect(g_host, g_httpsPort)) {
         Serial.printf("fetchpayment connect failed\n");
         return { "", "" };
     }
 
-    String SATSAMOUNT = String(sats);
+    String SATSAMOUNT = String(g_sats);
     String topost =
         "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
-        cfg_prefix + cfg_presets[preset].title + "\", \"route_hints\": \"" +
-        hints + "\"}";
+        cfg_prefix + cfg_presets[g_preset].title + "\", \"route_hints\": \"" +
+        g_hints + "\"}";
     String url = "/v1/charges";
 
     client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
+                 "Host: " + g_host + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Authorization: " + cfg_apikey + "\r\n" +
                  "Content-Type: application/json\r\n" +
@@ -565,7 +570,7 @@ bool checkpayment(String PAYID){
 
     Serial.printf("checkpayment %s\n", PAYID.c_str());
     
-    if (!client.connect(host, httpsPort)) {
+    if (!client.connect(g_host, g_httpsPort)) {
         Serial.printf("checkpayment connect failed\n");
         return false;
     }
@@ -573,7 +578,7 @@ bool checkpayment(String PAYID){
     String url = "/v1/charge/" + PAYID;
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
+                 "Host: " + g_host + "\r\n" +
                  "Authorization: " + cfg_apikey + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Connection: close\r\n\r\n");
