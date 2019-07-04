@@ -99,7 +99,7 @@ byte colPins[cols] = {26, 25, 33, 32};
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 char keybuf[20];
 
-long sats = 0;
+unsigned long sats;
 int preset = -1;
 
 void displayText(int col, int row, String txt) {
@@ -118,6 +118,7 @@ void displayText(int col, int row, String txt) {
 }
 
 void displayMenu() {
+    Serial.printf("displayMenu\n");
     display.firstPage();
     do
     {
@@ -202,61 +203,31 @@ void loop() {
 
     hexvalues = "";
 
-    // If keypadamount returns false, return to main menu.
+    // If no amount is selected, return to main menu.
     if (!keypadamount()) {
         return;
     }
+    
+    Serial.printf("pay %d %lu\n", preset, sats);
 
     payreq_t payreq = fetchpayment(sats);
     if (payreq.id == "") {
         return;
     }
 
-    qrmmaker(payreq.invoice);
-
-    for (int i = 0;  i < qrline.length(); i+=4) {
-        int tmp = i;
-        setoffour = qrline.substring(tmp, tmp+4);
-
-        for (int z = 0; z < 16; z++){
-            if (setoffour == ref[0][z]){
-                hexvalues += ref[1][z];
-            }
-        }
+    if (!displayQR(&payreq)) {
+        return;
     }
-
-    qrline = "";
-
-    //for loop to build the epaper friendly char singlehex byte array
-    //image of the QR
-    for (int i = 0;  i < 4209; i++) {
-        int tmp = i;
-        int pmt = tmp*2;
-        result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
-        singlehex[tmp] =
-            (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(),
-                                  NULL, 16);
-    }
-
-    display.firstPage();
-    do
-    {
-        display.setPartialWindow(0, 0, 200, 200);
-        display.fillScreen(GxEPD_WHITE);
-        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK);
-
-    }
-    while (display.nextPage());
 
     bool ispaid = checkpayment(payreq.id);
     while (counta < 40) {
         if (!ispaid) {
-            // Delay for 1 second, checking for abort.
-            for (int nn = 0; nn < 1000; ++nn) {
+            // Delay, checking for abort.
+            for (int nn = 0; nn < 200; ++nn) {
                 if (keypad.getKey() == '*') {
                     return;
                 }
-                delay(1);
+                delay(10);
             }
             ispaid = checkpayment(payreq.id);
             counta++;
@@ -331,7 +302,7 @@ int applyPreset() {
 }
 
 //Function for keypad
-bool keypadamount() {
+unsigned long keypadamount() {
     // Refresh the exchange rate.
     check_price();
     applyPreset();
@@ -445,6 +416,47 @@ void showPartialUpdate(String centsStr) {
     }
     while (display.nextPage());
 }
+    
+// Display QRcode
+bool displayQR(payreq_t * payreqp) {
+    qrmmaker(payreqp->invoice);
+
+    for (int i = 0;  i < qrline.length(); i+=4) {
+        int tmp = i;
+        setoffour = qrline.substring(tmp, tmp+4);
+
+        for (int z = 0; z < 16; z++){
+            if (setoffour == ref[0][z]){
+                hexvalues += ref[1][z];
+            }
+        }
+    }
+
+    qrline = "";
+
+    //for loop to build the epaper friendly char singlehex byte array
+    //image of the QR
+    for (int i = 0;  i < 4209; i++) {
+        int tmp = i;
+        int pmt = tmp*2;
+        result = "0x" + hexvalues.substring(pmt, pmt+2) + ",";
+        singlehex[tmp] =
+            (unsigned char)strtol(hexvalues.substring(pmt, pmt+2).c_str(),
+                                  NULL, 16);
+    }
+
+    display.firstPage();
+    do
+    {
+        display.setPartialWindow(0, 0, 200, 200);
+        display.fillScreen(GxEPD_WHITE);
+        display.drawBitmap( 7, 7, singlehex, 184, 183, GxEPD_BLACK);
+
+    }
+    while (display.nextPage());
+
+    return true;
+}
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
@@ -493,10 +505,13 @@ void check_price() {
     }
 }
 
-payreq_t fetchpayment(long sats){
+payreq_t fetchpayment(unsigned long sats){
     WiFiClientSecure client;
 
+    Serial.printf("fetchpayment %lu\n", sats);
+    
     if (!client.connect(host, httpsPort)) {
+        Serial.printf("fetchpayment connect failed\n");
         return { "", "" };
     }
 
@@ -530,8 +545,11 @@ payreq_t fetchpayment(long sats){
     DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
-
-    return { doc["data"]["id"], doc["data"]["lightning_invoice"]["payreq"] };
+    String id = doc["data"]["id"];
+    String payreq = doc["data"]["lightning_invoice"]["payreq"];
+    
+    Serial.printf("fetchpayment -> %d %s\n", id, payreq.c_str());
+    return { id, payreq };
 }
 
 // Check the status of the payment, return true if it has been paid.
@@ -539,7 +557,10 @@ bool checkpayment(String PAYID){
 
     WiFiClientSecure client;
 
+    Serial.printf("checkpayment %s\n", PAYID.c_str());
+    
     if (!client.connect(host, httpsPort)) {
+        Serial.printf("checkpayment connect failed\n");
         return false;
     }
 
@@ -565,8 +586,8 @@ bool checkpayment(String PAYID){
     DynamicJsonDocument doc(capacity);
 
     deserializeJson(doc, line);
-
     String stat = doc["data"]["status"];
-    Serial.println(stat);
+    
+    Serial.printf("checkpayment -> %s\n", stat.c_str());
     return stat == "paid";
 }
