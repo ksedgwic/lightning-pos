@@ -129,7 +129,7 @@ void setup() {
 
     pinMode(19, OUTPUT);
 
-    check_price();
+    checkrate();
 }
 
 void loop() {
@@ -221,7 +221,7 @@ int applyPreset() {
 //Function for keypad
 unsigned long keypadamount() {
     // Refresh the exchange rate.
-    check_price();
+    checkrate();
     applyPreset();
     int checker = 0;
     while (checker < sizeof(g_keybuf)) {
@@ -474,8 +474,8 @@ void waitForPayment(payreq_t * payreqp) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-void check_price() {
-    // Only check the g_ratestr if it is older than 10 minutes.
+void checkrate() {
+    // Only update the g_ratestr if it is older than 10 minutes.
     unsigned long now = millis();
     if (g_ratestr_tstamp == 0 ||	/* first time */
         now < g_ratestr_tstamp ||	/* wraps after 50 days */
@@ -487,6 +487,7 @@ void check_price() {
         WiFiClientSecure client;
 
         if (!client.connect(g_host, g_httpsPort)) {
+            Serial.printf("checkrate connect failed\n");
             return;
         }
 
