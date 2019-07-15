@@ -7,9 +7,9 @@
  *  Epaper PIN MAP: [
  *      VCC - 3.3V
  *      GND - GND
- *      SDI - GPIO23
- *     SCLK - GPIO18,
- *       CS - GPIO5
+ *      SDI - GPIO18
+ *     SCLK - GPIO5
+ *       CS - GPIO21
  *      D/C - GPIO17
  *    Reset - GPIO16
  *     Busy - GPIO4
@@ -17,8 +17,13 @@
  *
  *  Keypad Matrix PIN MAP: [
  *     Pin8 - GPIO13
- *     .............
- *     Pin1 - GPIO32
+ *        7 - GPIO12
+ *        6 - GPIO27
+ *        5 - GPIO33
+ *        4 - GPIO15
+ *        3 - GPIO32
+ *        2 - GPIO14
+ *     Pin1 - GPIO22
  *  ]
  *
  *  LED PIN MAP: [
@@ -77,15 +82,15 @@ char keys_[rows_][cols_] = {
                          {'7','8','9','C'},
                          {'*','0','#','D'}
 };
-byte rowPins_[rows_] = {13, 12, 14, 27};
-byte colPins_[cols_] = {26, 25, 33, 32};
+byte rowPins_[rows_] = {13, 12, 27, 33};
+byte colPins_[cols_] = {15, 32, 14, 22};
 Keypad g_keypad = Keypad( makeKeymap(keys_), rowPins_, colPins_, rows_, cols_ );
 
 GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> g_display(
         GxEPD2_154(
-                   /*CS=5*/ SS,
-                   /*DC=*/ 17,
-                   /*RST=*/ 16,
+                   /*CS=*/   21,
+                   /*DC=*/   17,
+                   /*RST=*/  16,
                    /*BUSY=*/ 4));
 
 char g_keybuf[20];
@@ -127,7 +132,7 @@ void setup() {
  Connected:
     Serial.println("connected");
 
-    pinMode(19, OUTPUT);
+    pinMode(26, OUTPUT);
 
     checkrate();
 }
@@ -463,9 +468,9 @@ void waitForPayment(payreq_t * payreqp) {
             }
             while (g_display.nextPage());
             
-            digitalWrite(19, HIGH);
+            digitalWrite(26, HIGH);
             delay(8000);
-            digitalWrite(19, LOW);
+            digitalWrite(26, LOW);
             delay(500);
             counta = 40;
         }
