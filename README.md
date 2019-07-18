@@ -27,15 +27,15 @@ The case can be 3D printed from the provided STL files.
 
 ## Assembly Directions
 
-*directions needed here*
+*directions coming soon*
 
 ## Setup Arduino SDK
 
-*directions needed here*
+*directions coming soon*
 
 ## Compile and Upload
 
 To configure the PoS terminal please copy config.h.template to
 config.h and edit as appropriate for your situation.
 
-*more coming here*
+*more coming soon*
