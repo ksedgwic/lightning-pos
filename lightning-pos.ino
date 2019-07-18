@@ -26,8 +26,13 @@
  *     Pin1 - GPIO22
  *  ]
  *
- *  LED PIN MAP: [
- *    POS (long leg)  - GPIO15
+ *  BLUE LED PIN MAP: [
+ *    POS (long leg)  - GPIO25
+ *    NEG (short leg) - GND
+ *  ]
+ *
+ *  GREEN LED PIN MAP: [
+ *    POS (long leg)  - GPIO26
  *    NEG (short leg) - GND
  *  ]
  *
