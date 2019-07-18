@@ -29,7 +29,7 @@ The case can be 3D printed from the provided STL files.
 
 *directions coming soon*
 
-## Setup Arduino SDK
+## Setup Arduino IDE
 
 *directions coming soon*
 
