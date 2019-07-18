@@ -1,3 +1,5 @@
+![Lightning PoS](lightning-pos.jpg)
+
 Lightning Point-of-Sale Terminal
 ================================================================
 
