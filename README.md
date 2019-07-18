@@ -3,9 +3,9 @@
 Lightning Point-of-Sale Terminal
 ================================================================
 
-This project is based on the
+Many thanks to [arcbtc)[https://github.com/arcbtc], his 
 [OpenNode Tutorial](https://github.com/arcbtc/bitcoin2019conf)
-developed by arcbtc.
+and gift of working kit bootstrapped this project.
 
 The goal of this project is to build an inexpensive open source
 point-of-sale terminal for lightning network payments.  The current
