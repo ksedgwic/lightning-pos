@@ -25,11 +25,17 @@ The [Parts List](parts-list.md) describes all needed parts.
 
 The case can be 3D printed from the provided STL files.
 
-#### Setup Arduino SDK
+## Assembly Directions
 
-[directions needed here]
+*directions needed here*
 
-#### Compile and Upload
+## Setup Arduino SDK
+
+*directions needed here*
+
+## Compile and Upload
 
 To configure the PoS terminal please copy config.h.template to
 config.h and edit as appropriate for your situation.
+
+*more coming here*
