@@ -31,8 +31,8 @@ The case can be 3D printed from the provided STL files.
 
 ## Setup Arduino IDE
 
-Start with the [SparkFun Software Setup Directions]
-(https://learn.sparkfun.com/tutorials/esp32-thing-plus-hookup-guide#software-setup)
+Start with the [SparkFun Software Setup
+Directions](https://learn.sparkfun.com/tutorials/esp32-thing-plus-hookup-guide#software-setup)
 to install the IDE and establish basic functionality.
 
 Next, from "Manage Libraries" install:
