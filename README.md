@@ -3,14 +3,27 @@
 Lightning Point-of-Sale Terminal
 ================================================================
 
-This project builds on the
+This project is based on the
 [OpenNode Tutorial](https://github.com/arcbtc/bitcoin2019conf)
-developed by arcbtc. Please refer to the tutorial for hardware and IDE
-setup.
+developed by arcbtc.
 
-*IMPORTANT* - I've moved the keypad connector down one pin to enable
-the letter (4th) column.  Please see the keymatrix pin map at the top
-of lightning-pos.ino.
+The goal of this project is to build an inexpensive open source
+point-of-sale terminal for lightning network payments.  The current
+design connects to OpenNode's API and presents invoices on demand.
+Connecting to BTCPay servers is in development.
+
+The unit is designed to be attached to a wall or used standalone on a
+counter.  It contains a rechargable battery and can operate for many
+hours.  It requires a WiFi network to connect to the servers.
+
+The current software supports three "presets" for commonly purchased
+items and an "other" item with a dynamically specified price.
+
+The [Parts List](parts-list.md) describes all needed parts.
+
+#### Setup Arduino SDK
+
+#### Compile and Upload
 
 To configure the PoS terminal please copy config.h.template to
 config.h and edit as appropriate for your situation.
