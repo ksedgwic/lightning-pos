@@ -2,6 +2,7 @@ Lightning PoS Parts List
 ================================================================
 
 | Description | Quantity | Price |
+|-------------|---------:|------:|
 | [MH-ET LIVE 1.54 Inch Epaper Module](https://www.aliexpress.com/item/32915952925.html) | 1 | 12.00 |
 | [16 Key Membrane Switch Keypad](https://www.aliexpress.com/item/32874565775.html) | 1 | 0.54 |
 | [SparkFun ESP32 Thing Plus](https://www.sparkfun.com/products/14689) | 1 | 20.95 |
