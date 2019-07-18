@@ -13,15 +13,21 @@ design connects to OpenNode's API and presents invoices on demand.
 Connecting to BTCPay servers is in development.
 
 The unit is designed to be attached to a wall or used standalone on a
-counter.  It contains a rechargable battery and can operate for many
-hours.  It requires a WiFi network to connect to the servers.
+counter.  It contains an internal battery and can operate for many
+hours on battery power.  It requires a WiFi network to connect to the
+invoice api.
 
 The current software supports three "presets" for commonly purchased
-items and an "other" item with a dynamically specified price.
+item descriptions and prices and an "other" item with a dynamically
+specified price.
 
 The [Parts List](parts-list.md) describes all needed parts.
 
+The case can be 3D printed from the provided STL files.
+
 #### Setup Arduino SDK
+
+[directions needed here]
 
 #### Compile and Upload
 
