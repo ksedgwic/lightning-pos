@@ -243,7 +243,7 @@ unsigned long keypadamount() {
         case NO_KEY:
             break;
         case '#':
-            displayText(20, 100, "Processing ...");
+            displayText(10, 100, "Generating QR ...");
             return true;
         case '*':
             if (cfg_presets[g_preset].price != 0.00) {
@@ -283,7 +283,7 @@ void displayAmountPage() {
         g_display.setFont(&FreeSansBold12pt7b);
         g_display.setTextColor(GxEPD_BLACK);
 
-        g_display.setCursor(0, 20);
+        g_display.setCursor(0, 30);
         g_display.println(" " + cfg_presets[g_preset].title);
 
         g_display.setCursor(0, 60);
@@ -292,6 +292,8 @@ void displayAmountPage() {
         } else {
             g_display.println();
         }
+        
+        g_display.setCursor(0, 95);
         g_display.println(" " + cfg_currency.substring(3) + ": ");
         g_display.println(" Sats: ");
 
@@ -324,8 +326,8 @@ void showPartialUpdate(String centsStr) {
         g_display.setTextColor(GxEPD_BLACK);
 
         // g_display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        g_display.setPartialWindow(70, 69, 120, 20);
-        g_display.setCursor(70, 89);
+        g_display.setPartialWindow(70, 75, 120, 20);
+        g_display.setCursor(70, 95);
         g_display.print(fiat);
 
     }
@@ -339,8 +341,8 @@ void showPartialUpdate(String centsStr) {
         g_display.setTextColor(GxEPD_BLACK);
 
         // g_display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        g_display.setPartialWindow(70, 98, 120, 20);
-        g_display.setCursor(70, 118);
+        g_display.setPartialWindow(70, 105, 120, 20);
+        g_display.setCursor(70, 125);
         g_display.print(g_sats);
 
     }
@@ -470,8 +472,9 @@ void waitForPayment(payreq_t * payreqp) {
                 g_display.fillScreen(GxEPD_WHITE);
                 g_display.setFont(&FreeSansBold18pt7b);
                 g_display.setTextColor(GxEPD_BLACK);
-                g_display.setCursor(0, 80);
-                g_display.println(" Success!");
+                g_display.setCursor(50, 80);
+                g_display.println("Got it");
+                g_display.setCursor(4, 130);
                 g_display.println("Thank you!");
             }
             while (g_display.nextPage());
