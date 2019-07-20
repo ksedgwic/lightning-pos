@@ -27,7 +27,7 @@ The case can be 3D printed from the provided STL files.
 
 ## Assembly Instructions
 
-The [Assmebly Instructions](assembly.md) describes all needed parts.
+[Assembly Instructions](assembly.md)
 
 ## Setup Arduino IDE
 
