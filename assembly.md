@@ -68,3 +68,108 @@ The display comes with an appropriately sized right-angle header.
 ![LED Wires](images/led-wires.jpg)
     
     
+#### Keypad
+
+1. Insert the keypad connector through the slot at the bottom of the
+   case front.
+   
+2. Peel the adhesive cover off the back of the keypad and press it
+   into place on the case as shown.
+   
+![Keypad](images/keypad.jpg)
+
+
+#### Attach Display to Case
+
+1. Gently screw the display in place in the case.  DO NOT OVERTIGHTEN
+   SCREWS.
+   
+![Attach Display](images/attach-display.jpg)
+   
+
+#### Attach LEDs to Case
+
+1. Insert the blue led into a led holder and snap into place in the
+   hole in the side of the case (above where the power switch will go.
+   It's helpful if the led's leads are horizontally oriented.
+   
+2. Insert the green led into a led holder and snap into place in the
+   hole in the front of the case.  Again it's helpful if the leads are
+   oriented horizontally.
+   
+![LEDs](images/leds.jpg)
+
+
+#### Attach the Switch to Case
+
+1. Snap the switch into place in the case.  Orient the switch so the
+   "1" side is towards the top of the case.
+   
+2. Connect the white and black switch leads to the ESP32 module as
+   shown.
+   
+![LEDs](images/switch-attach.jpg)
+
+
+#### Insert Battery
+
+1. Place the battery into the guides as shown.
+
+![Battery](images/battery.jpg)
+
+
+#### Battery Shield
+
+1. Place the shield on top of the battery in the guides as shown.
+
+The shield prevents the ESP32 module from damaging the surface of the
+battery.
+
+![Shield](images/shield.jpg)
+
+
+#### Keypad Connector
+
+1. Connect the keypad connector to the ESP32 as shown. Note that the
+   connector fits "one pin in" from the end of the header.
+
+![Keypad Connector](images/keypad-connector.jpg)
+
+
+#### Attach ESP32 to Case
+
+1. Fit the ESP32 into is mounting location.  Attach with screws.  DO
+   NOT OVERTIGHTEN THE SCREWS.
+
+![Attach ESP32](images/attach-esp32.jpg)
+
+
+#### Connect LEDS
+
+1. Connect the green wire to the longer lead of the green led.
+
+2. Connect the blue wire to the longer lead of the blue led.
+
+3. Connect one of the brown wires to the shorter lead of the green led.
+
+4. Connect the other brown wires to the shorter lead of the blue led.
+
+![Connect LEDs](images/connect-leds.jpg)
+
+
+#### Connect Battery
+
+1. Carefully connect the battery to the ESP32.  Support the ESP32 as
+   you insert the connector to avoid stressing the attachment screws.
+   
+**IMPORTANT** - Always disconnect the battery first when working on
+the inside of the terminal to avoid damaging the cicuits.
+
+![Connect Battery](images/connect-battery.jpg)
+
+![Assembled](images/assembled.jpg)
+
+#### Attach the Cover
+
+1. Attach the cover to the back with the screws.
+
