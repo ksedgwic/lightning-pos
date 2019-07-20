@@ -25,9 +25,7 @@ The [Parts List](parts-list.md) describes all needed parts.
 
 The case can be 3D printed from the provided STL files.
 
-## Assembly Instructions
-
-[Assembly Instructions](assembly.md)
+The [Assembly Instructions](assembly.md) show how to put it together.
 
 ## Setup Arduino IDE
 
