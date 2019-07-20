@@ -20,3 +20,11 @@
 
 ![Switch Harness](images/switch-harness.jpg)
 
+
+#### Display Header
+
+1. Solder right angle header onto the display.  They should face
+   inward, towards the circuitry under the display.
+   
+![Display Header](images/display-header.jpg)
+
