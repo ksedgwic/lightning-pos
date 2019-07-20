@@ -103,6 +103,9 @@ unsigned long g_sats;
 int g_preset = -1;
 
 void setup() {
+    pinMode(25, OUTPUT);	// Blue LED
+    digitalWrite(25, HIGH);
+    
     g_display.init(115200);
 
     displayText(20, 100, "Loading ...");
@@ -137,7 +140,7 @@ void setup() {
  Connected:
     Serial.println("connected");
 
-    pinMode(26, OUTPUT);
+    pinMode(26, OUTPUT);	// Green LED
 
     checkrate();
 }
