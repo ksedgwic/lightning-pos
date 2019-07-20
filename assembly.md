@@ -167,7 +167,11 @@ the inside of the terminal to avoid damaging the cicuits.
 
 ![Connect Battery](images/connect-battery.jpg)
 
+
+#### That's It!
+
 ![Assembled](images/assembled.jpg)
+
 
 #### Attach the Cover
 
