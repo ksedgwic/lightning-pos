@@ -27,6 +27,14 @@ The case can be 3D printed from the provided STL files.
 
 The [Assembly Instructions](assembly.md) show how to put it together.
 
+## Create Account at OpenNode
+
+Create an account at [OpenNode](https://app.opennode.co/join/fad8135d-ed69-4811-840c-bfa4e30df563).
+
+Navigate to Settings -> Integrations -> API keys.  Select "Add key"
+and set the permissions to "Invoices".  Make a note of the Invoice API
+key string.
+
 ## Setup Arduino IDE
 
 Start with the [SparkFun Software Setup
@@ -43,6 +51,6 @@ Next, from "Manage Libraries" install:
 ## Compile and Upload
 
 To configure the PoS terminal please copy config.h.template to
-config.h and edit as appropriate for your situation.
+config.h and edit as appropriate for your setup.
 
 Press the "Upload" button to compile and load into the Arduino.
