@@ -3,6 +3,17 @@
 
 [ESP32 Datasheet](https://cdn.sparkfun.com/assets/learn_tutorials/8/5/2/ESP32ThingPlus_GraphicalDatasheet.pdf)
 
+#### Split Wires
+
+Start with this:
+
+![Jumper Wires 1](images/jumper-wires1.jpg)
+
+End up with this:
+
+![Jumper Wires 2](images/jumper-wires2.jpg)
+
+
 #### Switch Harness
 
 1. Separate (pull apart) a black/white pair from the jumper wires.
