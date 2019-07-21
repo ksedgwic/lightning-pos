@@ -53,6 +53,13 @@ The display comes with an appropriately sized right-angle header.
 ![ESP32 Headers](images/esp32-headers.jpg)
    
 
+#### ESP32 Short
+
+1. Solder a piece of wire between the GND and NC pins on the ESP32.
+
+![ESP32 Short](images/esp32-short.jpg)
+
+
 #### Display Harness
 
 1. Separate eight wires from the jumper wires.  It's best if you can
