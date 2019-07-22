@@ -1,6 +1,6 @@
-![Lightning PoS](lightning-pos.jpg)
+![Lightning Pay Station](lightning-pos.jpg)
 
-Lightning Point-of-Sale Terminal
+Lightning Pay Station
 ================================================================
 
 Many thanks to [arcbtc](https://github.com/arcbtc), his 
