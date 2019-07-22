@@ -112,38 +112,13 @@ void setup() {
 
     Serial.begin(115200);
 
-    int nconfs = sizeof(cfg_wifi_confs) / sizeof(wifi_conf_t);
-    Serial.printf("scanning %d wifi confs\n", nconfs);
-    int ndx = 0;
-    while (true) {
-        const char* ssid = cfg_wifi_confs[ndx].ssid.c_str();
-        const char* pass = cfg_wifi_confs[ndx].pass.c_str();
-
-        Serial.printf("trying %s\n", ssid);
-        displayText(10, 100, String("Trying ") + ssid);
-
-        WiFi.begin(ssid, pass);
-
-        // Poll the status for a while.
-        for (int nn = 0; nn < 20; ++nn) {
-            if (WiFi.status() == WL_CONNECTED)
-                goto Connected;
-            delay(100);
-        }
-
-        // Try the next access point, wrap.
-        if (++ndx == nconfs) {
-            ndx = 0;
-        }
-    }
-
- Connected:
+    loopUntilConnected();
     Serial.println("connected");
 
     pinMode(26, OUTPUT);	// Green LED
 
-    // Retry until we get a rate.
-    while (!checkrate());
+    // Refresh the exchange rate.
+    checkrate();
 }
 
 void loop() {
@@ -183,6 +158,33 @@ void loop() {
     }
 
     waitForPayment(&payreq);
+}
+
+void loopUntilConnected() {
+    int nconfs = sizeof(cfg_wifi_confs) / sizeof(wifi_conf_t);
+    Serial.printf("scanning %d wifi confs\n", nconfs);
+    int ndx = 0;
+    while (true) {
+        const char* ssid = cfg_wifi_confs[ndx].ssid.c_str();
+        const char* pass = cfg_wifi_confs[ndx].pass.c_str();
+
+        Serial.printf("trying %s\n", ssid);
+        displayText(10, 100, String("Trying ") + ssid);
+
+        WiFi.begin(ssid, pass);
+
+        // Poll the status for a while.
+        for (int nn = 0; nn < 30; ++nn) {
+            if (WiFi.status() == WL_CONNECTED)
+                return;
+            delay(100);
+        }
+
+        // Try the next access point, wrap.
+        if (++ndx == nconfs) {
+            ndx = 0;
+        }
+    }
 }
 
 void displayText(int col, int row, String txt) {
@@ -235,7 +237,7 @@ int applyPreset() {
 //Function for keypad
 unsigned long keypadamount() {
     // Refresh the exchange rate.
-    while (!checkrate());
+    checkrate();
     applyPreset();
     int checker = 0;
     while (checker < sizeof(g_keybuf)) {
@@ -491,21 +493,25 @@ void waitForPayment(payreq_t * payreqp) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-bool checkrate() {
-    // Only update the g_ratestr if it is older than 10 minutes.
+void checkrate() {
+    // If we have a prior rate that is not wrapped and is fresh enough
+    // we're done.
     unsigned long now = millis();
-    if (g_ratestr_tstamp == 0 ||	/* first time */
-        now < g_ratestr_tstamp ||	/* wraps after 50 days */
-        now - g_ratestr_tstamp > (10 * 60 * 1000) /* 10 min old */) {
-
-        Serial.printf("updating %s g_ratestr\n", cfg_currency.c_str());
+    if (g_ratestr_tstamp != 0 &&	/* not first time */
+        now > g_ratestr_tstamp &&	/* wraps after 50 days */
+        now - g_ratestr_tstamp < (10 * 60 * 1000) /* 10 min old */)
+        return;
+            
+    // Loop until we succeed
+    while (true) {
+        Serial.printf("updating %s\n", cfg_currency.c_str());
         displayText(10, 100, "Updating " + cfg_currency + " ...");
 
         WiFiClientSecure client;
 
         if (!client.connect(g_host, g_httpsPort)) {
             Serial.printf("checkrate connect failed\n");
-            return false;
+            loopUntilConnected();
         }
 
         String url = "/v1/rates";
@@ -525,64 +531,79 @@ bool checkrate() {
 
         const size_t capacity =
             169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
+            
         DynamicJsonDocument doc(capacity);
-
-        deserializeJson(doc, line);
+        DeserializationError retval = deserializeJson(doc, line);
+        if (retval != DeserializationError::Ok) {
+            Serial.printf("deserializeJson failed: %s\n", retval.c_str());
+            continue; // retry
+        }
 
         String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
         g_ratestr = temp;
         g_ratestr_tstamp = now;
         Serial.printf("1 BTC = %s %s\n",
                       g_ratestr.c_str(), cfg_currency.substring(3).c_str());
+        return;
     }
-    return true;
 }
 
 payreq_t fetchpayment(){
     WiFiClientSecure client;
 
-    Serial.printf("fetchpayment %lu\n", g_sats);
+    while (true) {
+        Serial.printf("fetchpayment %lu\n", g_sats);
     
-    if (!client.connect(g_host, g_httpsPort)) {
-        Serial.printf("fetchpayment connect failed\n");
-        return { "", "" };
-    }
+        if (!client.connect(g_host, g_httpsPort)) {
+            Serial.printf("fetchpayment connect failed\n");
+            loopUntilConnected();
+        }
 
-    String SATSAMOUNT = String(g_sats);
-    String topost =
-        "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
-        cfg_prefix + cfg_presets[g_preset].title + "\", \"route_hints\": \"" +
-        g_hints + "\"}";
-    String url = "/v1/charges";
+        String SATSAMOUNT = String(g_sats);
+        String topost =
+            "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
+            cfg_prefix + cfg_presets[g_preset].title +
+            "\", \"route_hints\": \"" + g_hints + "\"}";
+        String url = "/v1/charges";
 
-    client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + g_host + "\r\n" +
-                 "User-Agent: ESP32\r\n" +
-                 "Authorization: " + cfg_apikey + "\r\n" +
-                 "Content-Type: application/json\r\n" +
-                 "Connection: close\r\n" +
-                 "Content-Length: " + topost.length() + "\r\n" +
-                 "\r\n" +
-                 topost + "\n");
+        client.print(String("POST ") + url + " HTTP/1.1\r\n" +
+                     "Host: " + g_host + "\r\n" +
+                     "User-Agent: ESP32\r\n" +
+                     "Authorization: " + cfg_apikey + "\r\n" +
+                     "Content-Type: application/json\r\n" +
+                     "Connection: close\r\n" +
+                     "Content-Length: " + topost.length() + "\r\n" +
+                     "\r\n" +
+                     topost + "\n");
 
-    while (client.connected()) {
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") {
+                break;
+            }
+        }
         String line = client.readStringUntil('\n');
-        if (line == "\r") {
-            break;
+
+        const size_t capacity =
+            169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
+        
+        DynamicJsonDocument doc(capacity);
+        DeserializationError retval = deserializeJson(doc, line);
+        if (retval != DeserializationError::Ok) {
+            Serial.printf("deserializeJson failed: %s\n", retval.c_str());
+            continue;
+        }
+        String id = doc["data"]["id"];
+        String payreq = doc["data"]["lightning_invoice"]["payreq"];
+
+        // Retry if we don't have a payment request
+        if (payreq.length() == 0) {
+            Serial.printf("fetchpayment failed, retrying\n");
+        } else {
+            Serial.printf("fetchpayment -> %d %s\n", id, payreq.c_str());
+            return { id, payreq };
         }
     }
-    String line = client.readStringUntil('\n');
-
-    const size_t capacity =
-        169*JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(168) + 3800;
-    DynamicJsonDocument doc(capacity);
-
-    deserializeJson(doc, line);
-    String id = doc["data"]["id"];
-    String payreq = doc["data"]["lightning_invoice"]["payreq"];
-    
-    Serial.printf("fetchpayment -> %d %s\n", id, payreq.c_str());
-    return { id, payreq };
 }
 
 // Check the status of the payment, return true if it has been paid.
@@ -591,36 +612,43 @@ bool checkpayment(String PAYID){
     WiFiClientSecure client;
 
     Serial.printf("checkpayment %s\n", PAYID.c_str());
-    
-    if (!client.connect(g_host, g_httpsPort)) {
-        Serial.printf("checkpayment connect failed\n");
-        return false;
-    }
 
-    String url = "/v1/charge/" + PAYID;
-
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + g_host + "\r\n" +
-                 "Authorization: " + cfg_apikey + "\r\n" +
-                 "User-Agent: ESP32\r\n" +
-                 "Connection: close\r\n\r\n");
-
-    while (client.connected()) {
-        String line = client.readStringUntil('\n');
-        if (line == "\r") {
-            break;
+    while (true) {
+        if (!client.connect(g_host, g_httpsPort)) {
+            Serial.printf("checkpayment connect failed\n");
+            loopUntilConnected();
         }
-    }
-    String line = client.readStringUntil('\n');
 
-    const size_t capacity =
-        JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
-        JSON_OBJECT_SIZE(14) + 650;
-    DynamicJsonDocument doc(capacity);
+        String url = "/v1/charge/" + PAYID;
 
-    deserializeJson(doc, line);
-    String stat = doc["data"]["status"];
+        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                     "Host: " + g_host + "\r\n" +
+                     "Authorization: " + cfg_apikey + "\r\n" +
+                     "User-Agent: ESP32\r\n" +
+                     "Connection: close\r\n\r\n");
+
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") {
+                break;
+            }
+        }
+        String line = client.readStringUntil('\n');
+
+        const size_t capacity =
+            JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
+            JSON_OBJECT_SIZE(14) + 650;
+        
+        DynamicJsonDocument doc(capacity);
+
+        DeserializationError retval = deserializeJson(doc, line);
+        if (retval != DeserializationError::Ok) {
+            Serial.printf("deserializeJson failed: %s\n", retval.c_str());
+            continue; // retry
+        }
+        String stat = doc["data"]["status"];
     
-    Serial.printf("checkpayment -> %s\n", stat.c_str());
-    return stat == "paid";
+        Serial.printf("checkpayment -> %s\n", stat.c_str());
+        return stat == "paid";
+    }
 }
