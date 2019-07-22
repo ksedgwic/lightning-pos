@@ -1,7 +1,7 @@
-![Lightning Pay Station](lightning-pos.jpg)
-
 Lightning Pay Station
 ================================================================
+
+![Lightning Pay Station](lightning-pos.jpg)
 
 Many thanks to [arcbtc](https://github.com/arcbtc), his 
 [OpenNode Tutorial](https://github.com/arcbtc/bitcoin2019conf)
