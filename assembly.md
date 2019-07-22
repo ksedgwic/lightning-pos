@@ -193,5 +193,6 @@ the inside of the terminal to avoid damaging the cicuits.
 
 #### Attach the Cover
 
-1. Attach the cover to the back with the screws.
+1. Press the rubber feet into the back cover.
 
+2. Attach the cover to the back with the screws.
