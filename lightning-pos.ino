@@ -142,7 +142,8 @@ void setup() {
 
     pinMode(26, OUTPUT);	// Green LED
 
-    checkrate();
+    // Retry until we get a rate.
+    while (!checkrate());
 }
 
 void loop() {
@@ -234,7 +235,7 @@ int applyPreset() {
 //Function for keypad
 unsigned long keypadamount() {
     // Refresh the exchange rate.
-    checkrate();
+    while (!checkrate());
     applyPreset();
     int checker = 0;
     while (checker < sizeof(g_keybuf)) {
@@ -490,7 +491,7 @@ void waitForPayment(payreq_t * payreqp) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-void checkrate() {
+bool checkrate() {
     // Only update the g_ratestr if it is older than 10 minutes.
     unsigned long now = millis();
     if (g_ratestr_tstamp == 0 ||	/* first time */
@@ -504,7 +505,7 @@ void checkrate() {
 
         if (!client.connect(g_host, g_httpsPort)) {
             Serial.printf("checkrate connect failed\n");
-            return;
+            return false;
         }
 
         String url = "/v1/rates";
@@ -534,6 +535,7 @@ void checkrate() {
         Serial.printf("1 BTC = %s %s\n",
                       g_ratestr.c_str(), cfg_currency.substring(3).c_str());
     }
+    return true;
 }
 
 payreq_t fetchpayment(){
