@@ -455,7 +455,7 @@ void waitForPayment(payreq_t * payreqp) {
     while (counta < 40) {
         if (!ispaid) {
             // Delay, checking for abort.
-            for (int nn = 0; nn < 200; ++nn) {
+            for (int nn = 0; nn < 10; ++nn) {
                 if (g_keypad.getKey() == '*') {
                     return;
                 }
@@ -534,11 +534,13 @@ void checkrate() {
             
         DynamicJsonDocument doc(capacity);
         DeserializationError retval = deserializeJson(doc, line);
-        if (retval != DeserializationError::Ok) {
+        if (retval == DeserializationError::NoMemory) {
+            continue;	// retry
+        } else if (retval != DeserializationError::Ok) {
             Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-            continue; // retry
+            continue; 	// retry
         }
-
+        
         String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
         g_ratestr = temp;
         g_ratestr_tstamp = now;
@@ -589,10 +591,13 @@ payreq_t fetchpayment(){
         
         DynamicJsonDocument doc(capacity);
         DeserializationError retval = deserializeJson(doc, line);
-        if (retval != DeserializationError::Ok) {
+        if (retval == DeserializationError::NoMemory) {
+            continue;	// retry
+        } else if (retval != DeserializationError::Ok) {
             Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-            continue;
+            continue; 	// retry
         }
+        
         String id = doc["data"]["id"];
         String payreq = doc["data"]["lightning_invoice"]["payreq"];
 
@@ -613,42 +618,41 @@ bool checkpayment(String PAYID){
 
     Serial.printf("checkpayment %s\n", PAYID.c_str());
 
-    while (true) {
-        if (!client.connect(g_host, g_httpsPort)) {
-            Serial.printf("checkpayment connect failed\n");
-            loopUntilConnected();
-        }
-
-        String url = "/v1/charge/" + PAYID;
-
-        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + g_host + "\r\n" +
-                     "Authorization: " + cfg_apikey + "\r\n" +
-                     "User-Agent: ESP32\r\n" +
-                     "Connection: close\r\n\r\n");
-
-        while (client.connected()) {
-            String line = client.readStringUntil('\n');
-            if (line == "\r") {
-                break;
-            }
-        }
-        String line = client.readStringUntil('\n');
-
-        const size_t capacity =
-            JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
-            JSON_OBJECT_SIZE(14) + 650;
-        
-        DynamicJsonDocument doc(capacity);
-
-        DeserializationError retval = deserializeJson(doc, line);
-        if (retval != DeserializationError::Ok) {
-            Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-            continue; // retry
-        }
-        String stat = doc["data"]["status"];
-    
-        Serial.printf("checkpayment -> %s\n", stat.c_str());
-        return stat == "paid";
+    if (!client.connect(g_host, g_httpsPort)) {
+        Serial.printf("checkpayment connect failed\n");
+        loopUntilConnected();
     }
+
+    String url = "/v1/charge/" + PAYID;
+
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                 "Host: " + g_host + "\r\n" +
+                 "Authorization: " + cfg_apikey + "\r\n" +
+                 "User-Agent: ESP32\r\n" +
+                 "Connection: close\r\n\r\n");
+
+    while (client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+            break;
+        }
+    }
+    String line = client.readStringUntil('\n');
+
+    const size_t capacity =
+        JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) +
+        JSON_OBJECT_SIZE(14) + 650;
+        
+    DynamicJsonDocument doc(capacity);
+    DeserializationError retval = deserializeJson(doc, line);
+    if (retval == DeserializationError::NoMemory) {
+        return false;
+    } else if (retval != DeserializationError::Ok) {
+        Serial.printf("deserializeJson failed: %s\n", retval.c_str());
+        return false;
+    }
+        
+    String stat = doc["data"]["status"];
+    Serial.printf("checkpayment -> %s\n", stat.c_str());
+    return stat == "paid";
 }
