@@ -49,6 +49,9 @@ Next, from "Manage Libraries" install:
 * AdaFruit GFX
 * Keypad
 
+Install pyserial:
+    pip install pyserial
+
 ## Compile and Upload
 
 To configure the PoS terminal please copy config.h.template to
