@@ -110,8 +110,10 @@ void setup() {
 
     displayText(20, 100, "Loading ...");
 
-    Serial.begin(115200);
+    Serial.begin(9600);
 
+    while (!Serial);
+    
     loopUntilConnected();
     Serial.println("connected");
 
@@ -225,6 +227,7 @@ void displayMenu() {
 }
 
 int applyPreset() {
+    checkrate();
     String centstr = String(long(cfg_presets[g_preset].price * 100));
     memset(g_keybuf, 0, sizeof(g_keybuf));
     memcpy(g_keybuf, centstr.c_str(), centstr.length());
@@ -237,7 +240,6 @@ int applyPreset() {
 //Function for keypad
 unsigned long keypadamount() {
     // Refresh the exchange rate.
-    checkrate();
     applyPreset();
     int checker = 0;
     while (checker < sizeof(g_keybuf)) {
@@ -493,24 +495,74 @@ void waitForPayment(payreq_t * payreqp) {
 
 ///////////////////////////// GET/POST REQUESTS///////////////////////////
 
-void checkrate() {
-    // If we have a prior rate that is not wrapped and is fresh enough
-    // we're done.
-    unsigned long now = millis();
-    if (g_ratestr_tstamp != 0 &&	/* not first time */
-        now > g_ratestr_tstamp &&	/* wraps after 50 days */
-        now - g_ratestr_tstamp < (10 * 60 * 1000) /* 10 min old */)
-        return;
-            
+void cmc_rate() {
     // Loop until we succeed
     while (true) {
-        Serial.printf("updating %s\n", cfg_currency.c_str());
+        Serial.printf("cmc_rate updating BTC%s\n", cfg_cmc_currency.c_str());
+        displayText(10, 100, "Updating BTC" + cfg_cmc_currency + " ...");
+
+        WiFiClientSecure client;
+
+        if (!client.connect(cfg_cmc_host.c_str(), cfg_cmc_port)) {
+            Serial.printf("cmc_rate connect failed\n");
+            loopUntilConnected();
+        }
+
+        String args = "?convert=" + cfg_cmc_currency + "&symbol=BTC";
+
+        client.print(String("GET ") + cfg_cmc_url + args + " HTTP/1.1\r\n" +
+                     "Host: " + cfg_cmc_host + "\r\n" +
+                     "User-Agent: ESP32\r\n" +
+                     "X-CMC_PRO_API_KEY: " + cfg_cmc_apikey + "\r\n" +
+                     "Accept: application/json\r\n" +
+                     "Connection: close\r\n\r\n");
+
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            Serial.printf("%s\n", line.c_str());
+            if (line == "\r") {
+                break;
+            }
+        }
+        // Length of the returned payload
+        String line = client.readStringUntil('\n');
+        Serial.printf("%s\n", line.c_str());
+        
+        line = client.readString();
+        Serial.printf("%s\n", line.c_str());
+        
+        const size_t capacity =
+            JSON_ARRAY_SIZE(1) + 2*JSON_OBJECT_SIZE(1) +
+            JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(5) +
+            JSON_OBJECT_SIZE(7) + JSON_OBJECT_SIZE(14) + 563 + 2048;
+            
+        DynamicJsonDocument doc(capacity);
+        DeserializationError retval = deserializeJson(doc, line);
+        if (retval == DeserializationError::NoMemory) {
+            continue;	// retry
+        } else if (retval != DeserializationError::Ok) {
+            Serial.printf("deserializeJson failed: %s\n", retval.c_str());
+            continue; 	// retry
+        }
+        
+        String temp = doc["data"]["BTC"]["quote"][cfg_cmc_currency]["price"];
+        g_ratestr = temp;
+        Serial.printf("1 BTC = %s %s\n",
+                      g_ratestr.c_str(), cfg_cmc_currency.c_str());
+        return;
+    }
+}
+
+void opn_rate() {
+    // Loop until we succeed
+    while (true) {
+        Serial.printf("opn_rate updating %s\n", cfg_currency.c_str());
         displayText(10, 100, "Updating " + cfg_currency + " ...");
 
         WiFiClientSecure client;
 
         if (!client.connect(g_host, g_httpsPort)) {
-            Serial.printf("checkrate connect failed\n");
+            Serial.printf("opn_rate connect failed\n");
             loopUntilConnected();
         }
 
@@ -543,12 +595,35 @@ void checkrate() {
         
         String temp = doc["data"][cfg_currency][cfg_currency.substring(3)];
         g_ratestr = temp;
-        g_ratestr_tstamp = now;
         Serial.printf("1 BTC = %s %s\n",
                       g_ratestr.c_str(), cfg_currency.substring(3).c_str());
         return;
     }
 }
+
+void checkrate() {
+    // If we have a prior rate that is not wrapped and is fresh enough
+    // we're done.
+    unsigned long now = millis();
+    Serial.printf("checkrate %lu %lu\n", g_ratestr_tstamp, now);
+    if (g_ratestr_tstamp != 0 &&	/* not first time */
+        now > g_ratestr_tstamp &&	/* wraps after 50 days */
+        now - g_ratestr_tstamp < (10 * 60 * 1000) /* 10 min old */) {
+        return;
+    }
+            
+    if (cfg_rate_feed == "OPN") {
+        opn_rate();
+    } else if (cfg_rate_feed == "CMC") {
+        cmc_rate();
+    } else {
+        Serial.printf("unknown cfg_rate_feed \"%s\"\n", cfg_rate_feed);
+        return;	// TODO - what to do here?
+    }
+    
+    g_ratestr_tstamp = now;
+}
+
 
 payreq_t fetchpayment(){
     WiFiClientSecure client;
