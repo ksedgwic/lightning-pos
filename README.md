@@ -50,7 +50,8 @@ Next, from "Manage Libraries" install:
 * Keypad
 
 Install pyserial:
-    pip install pyserial
+
+    pip install --user pyserial
 
 ## Compile and Upload
 
