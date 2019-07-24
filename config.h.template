@@ -24,14 +24,16 @@ preset_t cfg_presets[] = {
  { "Other",          0.00 }
 };
 
+// Select a BTC/fiat exchange rate data source:
 // "CMC" - CoinMarketCap
 // "OPN" - OpenNode
+//
 String cfg_rate_feed = "OPN";
 
 // Create an account at OpenNode, put the invoice API key here.
 //
 String cfg_opn_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
-String cfg_opn_currency = "BTCUSD"; //change to your currency ie BTCUSD, BTCEUR, etc
+String cfg_opn_currency = "BTCUSD"; // ie BTCUSD, BTCEUR, etc
 
 // Create an account at CoinMarketCap, put API key here.
 //
