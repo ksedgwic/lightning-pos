@@ -110,7 +110,7 @@ void setup() {
 
     displayText(20, 100, "Loading ...");
 
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     while (!Serial);
     
@@ -519,17 +519,15 @@ void cmc_rate() {
 
         while (client.connected()) {
             String line = client.readStringUntil('\n');
-            Serial.printf("%s\n", line.c_str());
             if (line == "\r") {
                 break;
             }
         }
-        // Length of the returned payload
+        // Discard the length of the returned payload
         String line = client.readStringUntil('\n');
-        Serial.printf("%s\n", line.c_str());
-        
+
+        // Read the rest of the payload
         line = client.readString();
-        Serial.printf("%s\n", line.c_str());
         
         const size_t capacity =
             JSON_ARRAY_SIZE(1) + 2*JSON_OBJECT_SIZE(1) +
