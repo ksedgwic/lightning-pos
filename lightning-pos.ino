@@ -471,7 +471,11 @@ void waitForPayment(payreq_t * payreqp) {
                 }
                 delay(10);
             }
-            ispaid = opn_checkpayment(payreqp->id);
+            if (cfg_invoice_api == "OPN") {
+                ispaid = opn_checkpayment(payreqp->id);
+            } else if (cfg_invoice_api == "LND") {
+                ispaid = lnd_checkpayment(payreqp->id);
+            }
             counta++;
         }
         else
