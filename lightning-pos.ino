@@ -171,7 +171,7 @@ void loopUntilConnected() {
         WiFi.begin(ssid, pass);
 
         // Poll the status for a while.
-        for (int nn = 0; nn < 30; ++nn) {
+        for (int nn = 0; nn < 50; ++nn) {
             if (WiFi.status() == WL_CONNECTED)
                 return;
             delay(100);

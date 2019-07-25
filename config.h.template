@@ -38,4 +38,4 @@ String cfg_opn_currency = "BTCUSD"; // ie BTCUSD, BTCEUR, etc
 // Create an account at CoinMarketCap, put API key here.
 //
 String cfg_cmc_currency = "USD";
-String cfg_cmc_apikey = "863dad23-7095-4f48-a3f3-9be964c6fb9e";
+String cfg_cmc_apikey = "YOUR-COINMARKETCAP-API-KEY";
