@@ -1,5 +1,9 @@
 // Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
 
+// The title on the main menu page, two lines.
+//
+String cfg_title[] = { " Lightning", "Pay Station" };   
+
 // The prefix is prepended to the lightning item description.
 //
 String cfg_prefix = "Acme: ";

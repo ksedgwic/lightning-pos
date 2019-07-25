@@ -210,8 +210,8 @@ void displayMenu() {
         g_display.setFont(&FreeSansBold18pt7b);
         g_display.setTextColor(GxEPD_BLACK);
         g_display.setCursor(0, 37);
-        g_display.println(" Pay with");
-        g_display.println(" Lightning");
+        g_display.println(cfg_title[0]);
+        g_display.println(cfg_title[1]);
         g_display.setFont(&FreeSansBold9pt7b);
         for (int ndx = 0; ndx < 4; ++ndx) {
             char but = 'A' + ndx;
