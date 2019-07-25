@@ -12,9 +12,9 @@ void cmc_rate() {
 
         WiFiClientSecure client;
 
-        if (!client.connect(cmc_host.c_str(), cmc_port)) {
+        while (!client.connect(cmc_host.c_str(), cmc_port)) {
             Serial.printf("cmc_rate connect failed\n");
-            loopUntilConnected();
+            setupNetwork();
         }
 
         String args = "?convert=" + cfg_cmc_currency + "&symbol=BTC";

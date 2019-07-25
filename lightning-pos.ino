@@ -38,7 +38,6 @@
  *
  */
 
-
 #include <WiFiClientSecure.h>
 
 #include <ArduinoJson.h> //Use version 5.3.0!
@@ -109,7 +108,7 @@ void setup() {
 
     while (!Serial);
     
-    loopUntilConnected();
+    setupNetwork();
     Serial.println("connected");
 
     pinMode(26, OUTPUT);	// Green LED
@@ -145,7 +144,13 @@ void loop() {
     }
     Serial.printf("pay %d %lu\n", g_preset, g_sats);
 
-    payreq_t payreq = opn_fetchpayment();
+    payreq_t payreq;
+    if (cfg_invoice_api == "OPN") {
+        payreq = opn_createinvoice();
+    } else if (cfg_invoice_api == "LND") {
+        payreq = lnd_createinvoice();
+    }
+    
     if (payreq.id == "") {
         return;
     }
@@ -157,7 +162,7 @@ void loop() {
     waitForPayment(&payreq);
 }
 
-void loopUntilConnected() {
+void setupNetwork() {
     int nconfs = sizeof(cfg_wifi_confs) / sizeof(wifi_conf_t);
     Serial.printf("scanning %d wifi confs\n", nconfs);
     int ndx = 0;
@@ -172,8 +177,10 @@ void loopUntilConnected() {
 
         // Poll the status for a while.
         for (int nn = 0; nn < 50; ++nn) {
-            if (WiFi.status() == WL_CONNECTED)
+            if (WiFi.status() == WL_CONNECTED) {
+                Serial.printf("connected to %s\n", ssid);
                 return;
+            }
             delay(100);
         }
 
@@ -448,7 +455,13 @@ bool displayQR(payreq_t * payreqp) {
 // Handle outcome
 void waitForPayment(payreq_t * payreqp) {
     int counta = 0;
-    bool ispaid = opn_checkpayment(payreqp->id);
+    bool ispaid = false;
+    if (cfg_invoice_api == "OPN") {
+        ispaid = opn_checkpayment(payreqp->id);
+    } else if (cfg_invoice_api == "LND") {
+        ispaid = lnd_checkpayment(payreqp->id);
+    }
+    
     while (counta < 40) {
         if (!ispaid) {
             // Delay, checking for abort.

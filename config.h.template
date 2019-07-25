@@ -29,10 +29,16 @@ preset_t cfg_presets[] = {
 };
 
 // Select a BTC/fiat exchange rate data source:
-// "CMC" - CoinMarketCap
 // "OPN" - OpenNode
+// "CMC" - CoinMarketCap
 //
 String cfg_rate_feed = "OPN";
+
+// Select a invoice api:
+// "OPN" - OpenNode
+// "LND" - LND REST connection
+//
+String cfg_invoice_api = "OPN";
 
 // Create an account at OpenNode, put the invoice API key here.
 //
@@ -43,3 +49,25 @@ String cfg_opn_currency = "BTCUSD"; // ie BTCUSD, BTCEUR, etc
 //
 String cfg_cmc_currency = "USD";
 String cfg_cmc_apikey = "YOUR-COINMARKETCAP-API-KEY";
+
+// LND REST connection
+String cfg_lnd_host = "yourhostname.com";
+int cfg_lnd_port = 8080;
+String cfg_lnd_inv_macaroon = "0201036C6E64022F030A101CCC89CD5A3210ADD76475453B05A3E41201301A170A08696E766F696365731204726561641205777269746500000620800B29AD748844BE14BFE4C8A17DCD30E56C5B878F88DFDF771E2BE7C675B1B9";
+String cfg_lnd_tlscert = "
+-----BEGIN CERTIFICATE-----
+MIICUzCCAfqgAwIBAgIRAIGfuZUbC//pRfh1y+lO8sQwCgYIKoZIzj0EAwIwMTEf
+MB0GA1UEChMWbG5kIGF1dG9nZW5lcmF0ZWQgY2VydDEOMAwGA1UEAxMFaG9tZTIw
+HhcNMTkwNTA2MjM0NzI0WhcNMjAwNjMwMjM0NzI0WjAxMR8wHQYDVQQKExZsbmQg
+YXV0b2dlbmVyYXRlZCBjZXJ0MQ4wDAYDVQQDEwVob21lMjBZMBMGByqGSM49AgEG
+CCqGSM49AwEHA0IABNAQMjkzMHuH4sp4E89alln27Kb41vV4kRyGV3U0K1OSGg/F
+X8s4d7nHrxaav20tHYupvkss6Y1lTm2eFBb23XujgfIwge8wDgYDVR0PAQH/BAQD
+AgKkMA8GA1UdEwEB/wQFMAMBAf8wgcsGA1UdEQSBwzCBwIIFaG9tZTKCCWxvY2Fs
+aG9zdIIEdW5peIIKdW5peHBhY2tldIcEfwAAAYcQAAAAAAAAAAAAAAAAAAAAAYcE
+wKhWC4cEwKhWaocErBEAAYcErB4gAYcQ/oAAAAAAAADlO0spfPYY8YcQ/oAAAAAA
+AACB2KVffSyueYcQ/oAAAAAAAAAAQtv//oLddIcQ/oAAAAAAAAAAQoz//rKXKocQ
+/oAAAAAAAAAQbGP//kctLocQ/oAAAAAAAACgsDT//mj6njAKBggqhkjOPQQDAgNH
+ADBEAh9MuAR30+OUL8oX4y8XOvKlxYMrpxwRl7jsAWGvRPB3AiEAh1FbG3dZbAyl
+St2IefPgNHsaGaOZVB1BPXanW8y6PYM=
+-----END CERTIFICATE-----
+";

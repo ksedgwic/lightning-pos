@@ -43,11 +43,14 @@ Directions](https://learn.sparkfun.com/tutorials/esp32-thing-plus-hookup-guide#s
 to install the IDE and establish basic functionality.
 
 Next, from "Manage Libraries" install:
+```
 * GxEPD2
-* ArduinoJson
+* Arduinojson
 * QRCode
 * AdaFruit GFX
 * Keypad
+* base64
+```
 
 Install pyserial:
 

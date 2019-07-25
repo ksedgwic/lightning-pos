@@ -1,9 +1,9 @@
 // Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
 
 // OpenNode config
-const char* g_host = "api.opennode.co";
-const int g_httpsPort = 443;
-String g_hints = "false";
+const char* opn_host = "api.opennode.co";
+const int opn_port = 443;
+String opn_hints = "false";
 
 void opn_rate() {
     // Loop until we succeed
@@ -13,15 +13,15 @@ void opn_rate() {
 
         WiFiClientSecure client;
 
-        if (!client.connect(g_host, g_httpsPort)) {
+        while (!client.connect(opn_host, opn_port)) {
             Serial.printf("opn_rate connect failed\n");
-            loopUntilConnected();
+            setupNetwork();
         }
 
         String url = "/v1/rates";
 
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + g_host + "\r\n" +
+                     "Host: " + opn_host + "\r\n" +
                      "User-Agent: ESP32\r\n" +
                      "Connection: close\r\n\r\n");
 
@@ -53,26 +53,26 @@ void opn_rate() {
         return;
     }
 }
-payreq_t opn_fetchpayment(){
+payreq_t opn_createinvoice() {
     WiFiClientSecure client;
 
     while (true) {
-        Serial.printf("fetchpayment %lu\n", g_sats);
+        Serial.printf("opn_createinvoice %lu\n", g_sats);
     
-        if (!client.connect(g_host, g_httpsPort)) {
-            Serial.printf("fetchpayment connect failed\n");
-            loopUntilConnected();
+        while (!client.connect(opn_host, opn_port)) {
+            Serial.printf("opn_createinvoice connect failed\n");
+            setupNetwork();
         }
 
         String SATSAMOUNT = String(g_sats);
         String topost =
             "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
             cfg_prefix + cfg_presets[g_preset].title +
-            "\", \"route_hints\": \"" + g_hints + "\"}";
+            "\", \"route_hints\": \"" + opn_hints + "\"}";
         String url = "/v1/charges";
 
         client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + g_host + "\r\n" +
+                     "Host: " + opn_host + "\r\n" +
                      "User-Agent: ESP32\r\n" +
                      "Authorization: " + cfg_opn_apikey + "\r\n" +
                      "Content-Type: application/json\r\n" +
@@ -106,9 +106,10 @@ payreq_t opn_fetchpayment(){
 
         // Retry if we don't have a payment request
         if (payreq.length() == 0) {
-            Serial.printf("fetchpayment failed, retrying\n");
+            Serial.printf("opn_createinvoice failed, retrying\n");
         } else {
-            Serial.printf("fetchpayment -> %d %s\n", id, payreq.c_str());
+            Serial.printf("opn_createinvoice -> %s %s\n",
+                          id.c_str(), payreq.c_str());
             return { id, payreq };
         }
     }
@@ -119,17 +120,17 @@ bool opn_checkpayment(String PAYID){
 
     WiFiClientSecure client;
 
-    Serial.printf("checkpayment %s\n", PAYID.c_str());
+    Serial.printf("opn_checkpayment %s\n", PAYID.c_str());
 
-    if (!client.connect(g_host, g_httpsPort)) {
-        Serial.printf("checkpayment connect failed\n");
-        loopUntilConnected();
+    while (!client.connect(opn_host, opn_port)) {
+        Serial.printf("opn_checkpayment connect failed\n");
+        setupNetwork();
     }
 
     String url = "/v1/charge/" + PAYID;
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + g_host + "\r\n" +
+                 "Host: " + opn_host + "\r\n" +
                  "Authorization: " + cfg_opn_apikey + "\r\n" +
                  "User-Agent: ESP32\r\n" +
                  "Connection: close\r\n\r\n");
@@ -156,6 +157,6 @@ bool opn_checkpayment(String PAYID){
     }
         
     String stat = doc["data"]["status"];
-    Serial.printf("checkpayment -> %s\n", stat.c_str());
+    Serial.printf("opn_checkpayment -> %s\n", stat.c_str());
     return stat == "paid";
 }
