@@ -18,6 +18,12 @@ void opn_rate() {
             setupNetwork();
         }
 
+        if (cfg_opn_fingerprint.length() > 0 &&
+            !client.verify(cfg_opn_fingerprint.c_str(), NULL)) {
+            Serial.printf("opn_rate verify failed\n");
+            continue;
+        }
+        
         String url = "/v1/rates";
 
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
@@ -64,6 +70,12 @@ payreq_t opn_createinvoice() {
             setupNetwork();
         }
 
+        if (cfg_opn_fingerprint.length() > 0 &&
+            !client.verify(cfg_opn_fingerprint.c_str(), NULL)) {
+            Serial.printf("opn_createinvoice verify failed\n");
+            continue;
+        }
+        
         String SATSAMOUNT = String(g_sats);
         String topost =
             "{  \"amount\": \"" + SATSAMOUNT + "\", \"description\": \"" +
@@ -127,6 +139,12 @@ bool opn_checkpayment(String PAYID){
         setupNetwork();
     }
 
+    if (cfg_opn_fingerprint.length() > 0 &&
+        !client.verify(cfg_opn_fingerprint.c_str(), NULL)) {
+        Serial.printf("opn_checkpayment verify failed\n");
+        return false;
+    }
+        
     String url = "/v1/charge/" + PAYID;
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +

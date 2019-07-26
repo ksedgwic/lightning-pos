@@ -18,6 +18,12 @@ payreq_t lnd_createinvoice() {
             setupNetwork();
         }
 
+        if (cfg_lnd_fingerprint.length() > 0 &&
+            !client.verify(cfg_lnd_fingerprint.c_str(), NULL)) {
+            Serial.printf("lnd_createinvoice verify failed\n");
+            continue;
+        }
+        
         String url = "/v1/invoices";
         
         String postdata =
@@ -89,6 +95,12 @@ bool lnd_checkpayment(String PAYID) {
         setupNetwork();
     }
 
+    if (cfg_lnd_fingerprint.length() > 0 &&
+        !client.verify(cfg_lnd_fingerprint.c_str(), NULL)) {
+        Serial.printf("lnd_checkpayment verify failed\n");
+        return false;
+    }
+        
     String url = "/v1/invoice/" + PAYID;
     
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +

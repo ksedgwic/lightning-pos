@@ -44,13 +44,21 @@ String cfg_invoice_api = "OPN";
 //
 String cfg_opn_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
 String cfg_opn_currency = "BTCUSD"; // ie BTCUSD, BTCEUR, etc
+String cfg_opn_fingerprint =
+       "a427768fe0266ed577cbee43a1573671b01e2f3e8a41b852d4fb2a1f76580306";
 
 // Create an account at CoinMarketCap, put API key here.
 //
 String cfg_cmc_currency = "USD";
 String cfg_cmc_apikey = "YOUR-COINMARKETCAP-API-KEY";
-
+String cfg_cmc_fingerprint =
+       "24ba0ee0fff0a44fb8daa4fd03e915796aef12f1808d3099cb2b6217fd84939d";
+       
 // LND REST connection
 String cfg_lnd_host = "yourhostname.com";
 int cfg_lnd_port = 8080;
 String cfg_lnd_inv_macaroon = "0201036C6E64022F030A101CCC89CD5A3210ADD76475453B05A3E41201301A170A08696E766F696365731204726561641205777269746500000620800B29AD748844BE14BFE4C8A17DCD30E56C5B878F88DFDF771E2BE7C675B1B9";
+// openssl x509 -noout -fingerprint -sha256 -inform pem -in tls.cert | \
+//     sed 's/://g' | tr '[:upper:]' '[:lower:]'
+String cfg_lnd_fingerprint =
+    "b88975acaf33085e87eb5c2d6f5bbe91d5c5deae11a865493c24e317de66a32e";

@@ -17,6 +17,12 @@ void cmc_rate() {
             setupNetwork();
         }
 
+        if (cfg_cmc_fingerprint.length() > 0 &&
+            !client.verify(cfg_cmc_fingerprint.c_str(), NULL)) {
+            Serial.printf("cmc_rate verify failed\n");
+            continue;
+        }
+        
         String args = "?convert=" + cfg_cmc_currency + "&symbol=BTC";
 
         client.print(String("GET ") + cmc_url + args + " HTTP/1.1\r\n" +
