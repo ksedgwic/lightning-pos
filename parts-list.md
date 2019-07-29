@@ -17,4 +17,5 @@ Lightning PoS Parts List
 | [Phillips Rounded Head Thread-Forming Screws](https://www.mcmaster.com/99461A710)      | 6 |  $1.41 |
 | [Push-In Bumpers](https://www.mcmaster.com/9544k12)                                    | 4 |  $0.30 |
 | [6 ft USB A to MicroUSB B Cable](https://www.amazon.com/gp/product/B001AR6MI6)         | 1 |  $6.39 |
+| [3D Printed Case                                                                       | 1 |        |
 | **TOTAL**                                                                              |   | $61.32 |

@@ -8,9 +8,11 @@ Many thanks to [arcbtc](https://github.com/arcbtc), his
 and gift of working kit totally bootstrapped this project.
 
 The goal of this project is to build an inexpensive open source
-point-of-sale terminal for lightning network payments.  The current
-design connects to OpenNode's API and presents invoices on demand.
-Connecting to BTCPay servers is in development.
+point-of-sale terminal for lightning network payments.  The
+terminal can connect to:
+1. OpenNode Accounts
+2. BTCPay's Invoice API
+3. LND's REST Interface
 
 The unit is designed to be attached to a wall or used standalone on a
 counter.  It contains an internal battery and can operate for many
