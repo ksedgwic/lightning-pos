@@ -1,7 +1,5 @@
 // Copyright 2019 Bonsai Software, Inc.  All Rights Reserved.
 
-// The title on the main menu page, two lines.
-//
 String cfg_title[] = { " Lightning", "Pay Station" };   
 
 // The prefix is prepended to the lightning item description.
@@ -30,13 +28,15 @@ preset_t cfg_presets[] = {
 
 // Select a BTC/fiat exchange rate data source:
 // "OPN" - OpenNode
+// "BTP" - BTCPay
 // "CMC" - CoinMarketCap
 //
 String cfg_rate_feed = "OPN";
 
 // Select a invoice api:
 // "OPN" - OpenNode
-// "LND" - LND REST connection
+// "BTP" - BTCPay
+// "LND" - Direct LND connection
 //
 String cfg_invoice_api = "OPN";
 
@@ -46,6 +46,16 @@ String cfg_opn_apikey = "YOUR-OPENNODE-INVOICE-API-KEY";
 String cfg_opn_currency = "BTCUSD"; // ie BTCUSD, BTCEUR, etc
 String cfg_opn_fingerprint =
        "a427768fe0266ed577cbee43a1573671b01e2f3e8a41b852d4fb2a1f76580306";
+
+// BTCPay Config
+String cfg_btp_currency = "USD";
+String cfg_btp_host = "btcpay.host.com";
+int cfg_btp_port = 443;
+String cfg_btp_apikey =
+    "MGRFTUMwZGI3TUVrN0VxxxxxxxxPV1cwSEJIa0NrZEdrRWRDMGlDTGRXUQ==";
+String cfg_btp_storeid = "BGrT9u6h545xxxxxxxxjadMEkjbW3dcwogaDNoGD9Wfr";
+String cfg_btp_fingerprint =
+    "fac69ecdeb5c3de28b653712a366e11ab500ed5db2aff5a3f239ce05c2c73118";
 
 // Create an account at CoinMarketCap, put API key here.
 //
@@ -57,7 +67,8 @@ String cfg_cmc_fingerprint =
 // LND REST connection
 String cfg_lnd_host = "yourhostname.com";
 int cfg_lnd_port = 8080;
-String cfg_lnd_inv_macaroon = "0201036C6E64022F030A101CCC89CD5A3210ADD76475453B05A3E41201301A170A08696E766F696365731204726561641205777269746500000620800B29AD748844BE14BFE4C8A17DCD30E56C5B878F88DFDF771E2BE7C675B1B9";
+String cfg_lnd_inv_macaroon =
+    "0201036C6E64022F030A101XXXXXXXXXX210ADD76475453B05A3E41201301A170A08696E766F696365731204726561641205777269746500000620800B29AD748844BE14BFE4C8A17DCD30E56C5B878F88DFDF771E2BE7C675B1B9";
 // openssl x509 -noout -fingerprint -sha256 -inform pem -in tls.cert | \
 //     sed 's/://g' | tr '[:upper:]' '[:lower:]'
 String cfg_lnd_fingerprint =
