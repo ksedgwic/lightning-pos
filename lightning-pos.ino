@@ -520,6 +520,8 @@ void checkrate() {
             
     if (cfg_rate_feed == "OPN") {
         opn_rate();
+    } else if (cfg_rate_feed == "BTP") {
+        btp_rate();
     } else if (cfg_rate_feed == "CMC") {
         cmc_rate();
     } else {
