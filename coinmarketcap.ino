@@ -59,9 +59,8 @@ void cmc_rate() {
         }
         
         String temp = doc["data"]["BTC"]["quote"][cfg_cmc_currency]["price"];
-        g_ratestr = temp;
-        Serial.printf("1 BTC = %s %s\n",
-                      g_ratestr.c_str(), cfg_cmc_currency.c_str());
+        g_rate = temp.toDouble();
+        Serial.printf("1 BTC = %f %s\n", g_rate, cfg_cmc_currency.c_str());
         return;
     }
 }

@@ -53,9 +53,9 @@ void opn_rate() {
         
         String temp =
             doc["data"][cfg_opn_currency][cfg_opn_currency.substring(3)];
-        g_ratestr = temp;
-        Serial.printf("1 BTC = %s %s\n",
-                      g_ratestr.c_str(), cfg_opn_currency.substring(3).c_str());
+        g_rate = temp.toDouble();
+        Serial.printf("1 BTC = %f %s\n",
+                      g_rate, cfg_opn_currency.substring(3).c_str());
         return;
     }
 }

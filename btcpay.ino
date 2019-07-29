@@ -10,7 +10,7 @@ void btp_rate() {
 
         WiFiClientSecure client;
 
-        while (!client.connect(btp_host.c_str(), btp_port)) {
+        while (!client.connect(cfg_btp_host.c_str(), cfg_btp_port)) {
             Serial.printf("btp_rate connect failed\n");
             setupNetwork();
         }
@@ -20,14 +20,16 @@ void btp_rate() {
             Serial.printf("btp_rate verify failed\n");
             continue;
         }
-        
-        String args = "?convert=" + cfg_btp_currency + "&symbol=BTC";
 
-        client.print(String("GET ") + btp_url + args + " HTTP/1.1\r\n" +
-                     "Host: " + btp_host + "\r\n" +
+        String url = "/rates/" + cfg_btp_currency;
+        String args = "?storeId=" + cfg_btp_storeid;
+        
+        client.print(String("GET ") + url + args + " HTTP/1.1\r\n" +
+                     "Host: " + cfg_btp_host + "\r\n" +
                      "User-Agent: ESP32\r\n" +
-                     "X-BTP_PRO_API_KEY: " + cfg_btp_apikey + "\r\n" +
-                     "Accept: application/json\r\n" +
+                     "Authorization: Basic " + cfg_btp_apikey + "\r\n" +
+                     "accept: application/json\r\n" +
+                     "X-accept-version: 2.0.0\r\n" +
                      "Connection: close\r\n\r\n");
 
         while (client.connected()) {
@@ -41,11 +43,10 @@ void btp_rate() {
 
         // Read the rest of the payload
         line = client.readString();
-        
+
         const size_t capacity =
-            JSON_ARRAY_SIZE(1) + 2*JSON_OBJECT_SIZE(1) +
-            JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(5) +
-            JSON_OBJECT_SIZE(7) + JSON_OBJECT_SIZE(14) + 563 + 2048;
+            JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) +
+            JSON_OBJECT_SIZE(5) + 91 + 2048;
             
         DynamicJsonDocument doc(capacity);
         DeserializationError retval = deserializeJson(doc, line);
@@ -55,11 +56,10 @@ void btp_rate() {
             Serial.printf("deserializeJson failed: %s\n", retval.c_str());
             continue; 	// retry
         }
-        
-        String temp = doc["data"]["BTC"]["quote"][cfg_btp_currency]["price"];
-        g_ratestr = temp;
-        Serial.printf("1 BTC = %s %s\n",
-                      g_ratestr.c_str(), cfg_btp_currency.c_str());
+
+        double rate = doc["data"][0]["rate"];
+        g_rate = 1.0 / rate;
+        Serial.printf("1 BTC = %f %s\n", g_rate, cfg_btp_currency.c_str());
         return;
     }
 }
@@ -70,8 +70,6 @@ payreq_t btp_createinvoice() {
     while (true) {
         Serial.printf("btp_createinvoice %lu\n", g_sats);
 
-        // client.setCACert(cfg_btp_tlscert.c_str());
-        
         while (!client.connect(cfg_btp_host.c_str(), cfg_btp_port)) {
             Serial.printf("btp_createinvoice %s %d connect failed\n",
                           cfg_btp_host.c_str(), cfg_btp_port);
@@ -84,16 +82,23 @@ payreq_t btp_createinvoice() {
             continue;
         }
         
-        String url = "/v1/invoices";
-        
-        String postdata =
-            "{\"memo\":\"" + cfg_prefix + cfg_presets[g_preset].title + "\", " +
-            "\"value\":\"" + String(g_sats) + "\"}";
+        String url = "/invoices";
+        double price = g_sats * g_rate / 100e6;
 
+        String postdata =
+            "{\"itemDesc\":\"" + cfg_prefix + cfg_presets[g_preset].title + "\", " +
+            "\"price\":\"" + String(price) + "\", " +
+            "\"currency\":\"" + cfg_btp_currency + "\"" +
+            "}";
+
+        // Serial.printf("%s\n", postdata.c_str());
+        
         client.print(String("POST ") + url + " HTTP/1.1\r\n" +
                      "Host: " + cfg_btp_host + "\r\n" +
                      "User-Agent: ESP32\r\n" +
-                     "Grpc-Metadata-macaroon: " + cfg_btp_inv_macaroon +"\r\n" +
+                     "Authorization: Basic " + cfg_btp_apikey + "\r\n" +
+                     "accept: application/json\r\n" +
+                     "X-accept-version: 2.0.0\r\n" +
                      "Content-Type: application/json\r\n" +
                      "Connection: close\r\n" +
                      "Content-Length: " + postdata.length() + "\r\n" +
@@ -106,9 +111,20 @@ payreq_t btp_createinvoice() {
                 break;
             }
         }
+        // Discard the length of the returned payload
         String line = client.readStringUntil('\n');
+
+        // Read the rest of the payload
+        line = client.readString();
         
-        const size_t capacity = JSON_OBJECT_SIZE(3) + 293 + 1000;
+        // Serial.printf("%s\n", line.c_str());
+
+        const size_t capacity = 
+            2*JSON_ARRAY_SIZE(0) + JSON_ARRAY_SIZE(2) +
+            9*JSON_OBJECT_SIZE(1) + 6*JSON_OBJECT_SIZE(2) +
+            5*JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(9) +
+            2*JSON_OBJECT_SIZE(15) + JSON_OBJECT_SIZE(37) +
+            3235 + 8192;
         
         DynamicJsonDocument doc(capacity);
         DeserializationError retval = deserializeJson(doc, line);
@@ -118,20 +134,9 @@ payreq_t btp_createinvoice() {
             Serial.printf("deserializeJson failed: %s\n", retval.c_str());
             continue; 	// retry
         }
-        
-        String r_hash = doc["r_hash"];
-        String payreq = doc["payment_request"];
 
-        unsigned char id_bin[32];
-        unsigned int id_bin_len =
-            decode_base64((unsigned char *)r_hash.c_str(), id_bin);
-
-        String id;
-        for (int ndx = 0; ndx < id_bin_len; ++ndx) {
-            char buffer[3];
-            sprintf(buffer, "%02x", id_bin[ndx]);
-            id += buffer;
-        }
+        String id = doc["data"]["id"];
+        String payreq = doc["data"]["addresses"]["BTC_LightningLike"];
         
         // Retry if we don't have a payment request
         if (payreq.length() == 0) {
@@ -161,12 +166,15 @@ bool btp_checkpayment(String PAYID) {
         return false;
     }
         
-    String url = "/v1/invoice/" + PAYID;
-    
+    String url = "/invoices/" + PAYID;
+        
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                  "Host: " + cfg_btp_host + "\r\n" +
                  "User-Agent: ESP32\r\n" +
-                 "Grpc-Metadata-macaroon: " + cfg_btp_inv_macaroon +"\r\n" +
+                 "Authorization: Basic " + cfg_btp_apikey + "\r\n" +
+                 "Content-Type: application/json\r\n" +
+                 "accept: application/json\r\n" +
+                 "X-accept-version: 2.0.0\r\n" +
                  "Connection: close\r\n\r\n");
 
     while (client.connected()) {
@@ -175,10 +183,21 @@ bool btp_checkpayment(String PAYID) {
             break;
         }
     }
-    String line = client.readString();
+    // Discard the length of the returned payload
+    String line = client.readStringUntil('\n');
 
-    const size_t capacity = JSON_OBJECT_SIZE(16) + 554 + 2048;
-            
+    // Read the rest of the payload
+    line = client.readString();
+
+    // Serial.printf("%s\n", line.c_str());
+
+    const size_t capacity =
+        2*JSON_ARRAY_SIZE(0) + JSON_ARRAY_SIZE(2) +
+        10*JSON_OBJECT_SIZE(1) + 5*JSON_OBJECT_SIZE(2) +
+        5*JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(9) +
+        2*JSON_OBJECT_SIZE(15) + JSON_OBJECT_SIZE(37) +
+        3216 + 8192;
+
     DynamicJsonDocument doc(capacity);
     DeserializationError retval = deserializeJson(doc, line);
     if (retval == DeserializationError::NoMemory) {
@@ -188,7 +207,7 @@ bool btp_checkpayment(String PAYID) {
         return false;
     }
 
-    String state = doc["state"];
-    Serial.printf("btp_checkpayment -> %s\n", state.c_str());
-    return state == "SETTLED";
+    String status = doc["data"]["status"];
+    Serial.printf("btp_checkpayment -> %s\n", status.c_str());
+    return status == "complete";
 }

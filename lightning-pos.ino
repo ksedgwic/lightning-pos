@@ -64,8 +64,8 @@ struct preset_t {
 #include "config.h"
 
 // fiat/btc price
-String g_ratestr;
-unsigned long g_ratestr_tstamp = 0;
+double g_rate;
+unsigned long g_rate_tstamp = 0;
 
 struct payreq_t {
     String id;
@@ -147,6 +147,8 @@ void loop() {
     payreq_t payreq;
     if (cfg_invoice_api == "OPN") {
         payreq = opn_createinvoice();
+    } else if (cfg_invoice_api == "BTP") {
+        payreq = btp_createinvoice();
     } else if (cfg_invoice_api == "LND") {
         payreq = lnd_createinvoice();
     }
@@ -320,10 +322,8 @@ void displayAmountPage() {
 // Display current amount
 void showPartialUpdate(String centsStr) {
 
-    float rate = g_ratestr.toFloat();
-
     float fiat = centsStr.toFloat() / 100.0;
-    g_sats = long(fiat * 100e6 / rate);
+    g_sats = long(fiat * 100e6 / g_rate);
 
     g_display.firstPage();
     do
@@ -458,6 +458,8 @@ void waitForPayment(payreq_t * payreqp) {
     bool ispaid = false;
     if (cfg_invoice_api == "OPN") {
         ispaid = opn_checkpayment(payreqp->id);
+    } else if (cfg_invoice_api == "BTP") {
+        ispaid = btp_checkpayment(payreqp->id);
     } else if (cfg_invoice_api == "LND") {
         ispaid = lnd_checkpayment(payreqp->id);
     }
@@ -473,6 +475,8 @@ void waitForPayment(payreq_t * payreqp) {
             }
             if (cfg_invoice_api == "OPN") {
                 ispaid = opn_checkpayment(payreqp->id);
+            } else if (cfg_invoice_api == "BTP") {
+                ispaid = btp_checkpayment(payreqp->id);
             } else if (cfg_invoice_api == "LND") {
                 ispaid = lnd_checkpayment(payreqp->id);
             }
@@ -511,10 +515,10 @@ void checkrate() {
     // If we have a prior rate that is not wrapped and is fresh enough
     // we're done.
     unsigned long now = millis();
-    Serial.printf("checkrate %lu %lu\n", g_ratestr_tstamp, now);
-    if (g_ratestr_tstamp != 0 &&	/* not first time */
-        now > g_ratestr_tstamp &&	/* wraps after 50 days */
-        now - g_ratestr_tstamp < (10 * 60 * 1000) /* 10 min old */) {
+    Serial.printf("checkrate %lu %lu\n", g_rate_tstamp, now);
+    if (g_rate_tstamp != 0 &&	/* not first time */
+        now > g_rate_tstamp &&	/* wraps after 50 days */
+        now - g_rate_tstamp < (10 * 60 * 1000) /* 10 min old */) {
         return;
     }
             
@@ -529,7 +533,7 @@ void checkrate() {
         return;	// TODO - what to do here?
     }
     
-    g_ratestr_tstamp = now;
+    g_rate_tstamp = now;
 }
 
 
