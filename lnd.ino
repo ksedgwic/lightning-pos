@@ -8,7 +8,7 @@ payreq_t lnd_createinvoice() {
     WiFiClientSecure client;
 
     while (true) {
-        Serial.printf("lnd_createinvoice %lu\n", g_sats);
+        Serial.printf("lnd_createinvoice %f %lu\n", g_fiat, g_sats);
 
         // client.setCACert(cfg_lnd_tlscert.c_str());
         

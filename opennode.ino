@@ -63,7 +63,7 @@ payreq_t opn_createinvoice() {
     WiFiClientSecure client;
 
     while (true) {
-        Serial.printf("opn_createinvoice %lu\n", g_sats);
+        Serial.printf("opn_createinvoice %f %lu\n", g_fiat, g_sats);
     
         while (!client.connect(opn_host, opn_port)) {
             Serial.printf("opn_createinvoice connect failed\n");

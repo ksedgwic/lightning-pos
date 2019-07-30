@@ -94,6 +94,7 @@ GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> g_display(
 
 char g_keybuf[20];
 unsigned long g_sats;
+double g_fiat;
 int g_preset = -1;
 
 void setup() {
@@ -142,7 +143,7 @@ void loop() {
     if (!keypadamount()) {
         return;
     }
-    Serial.printf("pay %d %lu\n", g_preset, g_sats);
+    Serial.printf("pay %d %f %lu\n", g_preset, g_fiat, g_sats);
 
     payreq_t payreq;
     if (cfg_invoice_api == "OPN") {
@@ -322,8 +323,10 @@ void displayAmountPage() {
 // Display current amount
 void showPartialUpdate(String centsStr) {
 
-    float fiat = centsStr.toFloat() / 100.0;
-    g_sats = long(fiat * 100e6 / g_rate);
+    g_fiat = centsStr.toFloat() / 100.0;
+
+    // Convert fiat to sats, add 0.9999 and truncate (ceiling)
+    g_sats = long((g_fiat * 100e6 / g_rate) + 0.9999);
 
     g_display.firstPage();
     do
@@ -335,7 +338,7 @@ void showPartialUpdate(String centsStr) {
         // g_display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
         g_display.setPartialWindow(70, 75, 120, 20);
         g_display.setCursor(70, 95);
-        g_display.print(fiat);
+        g_display.print(g_fiat);
 
     }
     while (g_display.nextPage());

@@ -68,7 +68,7 @@ payreq_t btp_createinvoice() {
     WiFiClientSecure client;
 
     while (true) {
-        Serial.printf("btp_createinvoice %lu\n", g_sats);
+        Serial.printf("btp_createinvoice %f %lu\n", g_fiat, g_sats);
 
         while (!client.connect(cfg_btp_host.c_str(), cfg_btp_port)) {
             Serial.printf("btp_createinvoice %s %d connect failed\n",
@@ -83,15 +83,14 @@ payreq_t btp_createinvoice() {
         }
         
         String url = "/invoices";
-        double price = g_sats * g_rate / 100e6;
 
         String postdata =
             "{\"itemDesc\":\"" + cfg_prefix + cfg_presets[g_preset].title + "\", " +
-            "\"price\":\"" + String(price) + "\", " +
+            "\"price\":\"" + String(g_fiat) + "\", " +
             "\"currency\":\"" + cfg_btp_currency + "\"" +
             "}";
 
-        // Serial.printf("%s\n", postdata.c_str());
+        Serial.printf("%s\n", postdata.c_str());
         
         client.print(String("POST ") + url + " HTTP/1.1\r\n" +
                      "Host: " + cfg_btp_host + "\r\n" +
