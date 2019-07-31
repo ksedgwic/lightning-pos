@@ -21,8 +21,10 @@ void btp_rate() {
             continue;
         }
 
-        String url = "/rates/" + cfg_btp_currency;
+        String url = "/rates/" + cfg_btp_currency + "/BTC";
         String args = "?storeId=" + cfg_btp_storeid;
+        
+        Serial.printf("%s%s\n", url.c_str(), args.c_str());
         
         client.print(String("GET ") + url + args + " HTTP/1.1\r\n" +
                      "Host: " + cfg_btp_host + "\r\n" +
@@ -44,6 +46,8 @@ void btp_rate() {
         // Read the rest of the payload
         line = client.readString();
 
+        Serial.printf("%s\n", line.c_str());
+        
         const size_t capacity =
             JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) +
             JSON_OBJECT_SIZE(5) + 91 + 2048;
@@ -57,7 +61,7 @@ void btp_rate() {
             continue; 	// retry
         }
 
-        double rate = doc["data"][0]["rate"];
+        double rate = doc["data"]["rate"];
         g_rate = 1.0 / rate;
         Serial.printf("1 BTC = %f %s\n", g_rate, cfg_btp_currency.c_str());
         return;
@@ -116,7 +120,7 @@ payreq_t btp_createinvoice() {
         // Read the rest of the payload
         line = client.readString();
         
-        // Serial.printf("%s\n", line.c_str());
+        Serial.printf("%s\n", line.c_str());
 
         const size_t capacity = 
             2*JSON_ARRAY_SIZE(0) + JSON_ARRAY_SIZE(2) +
