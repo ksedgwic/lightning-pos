@@ -51,6 +51,8 @@
 #include <Fonts/FreeSansBold9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 
+#include <bip39.h>
+
 struct wifi_conf_t {
     String ssid;
     String pass;
@@ -97,6 +99,8 @@ unsigned long g_sats;
 double g_fiat;
 int g_preset = -1;
 
+Bip39 bip39;
+
 void setup() {
     pinMode(25, OUTPUT);	// Blue LED
     digitalWrite(25, HIGH);
@@ -116,6 +120,21 @@ void setup() {
 
     // Refresh the exchange rate.
     checkrate();
+
+    uint8_t payload[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    Serial.println("calling setPayloadBytes");
+    bip39.setPayloadBytes(sizeof(payload));
+    Serial.println("calling setPayload");
+    bip39.setPayload(sizeof(payload), (uint8_t *)payload);
+    Serial.println("calling getWord");
+    for (int ndx = 0; ndx < 12; +ndx) {
+        uint16_t word = bip39.getWord(ndx);
+        Serial.printf("%d\n", word);
+        Serial.printf("%s\n", bip39.getMnemonic(word));
+    }
 }
 
 void loop() {
