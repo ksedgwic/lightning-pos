@@ -101,6 +101,23 @@ int g_preset = -1;
 
 Bip39 bip39;
 
+void do_bip39_stuff() {
+    char * entropy = "123456";
+    Sha256Class sha256;
+    sha256.init();
+    for(uint8_t ii=0; ii < strlen(entropy); ii++) {
+        sha256.write(entropy[ii]);
+    }
+    uint8_t payload[16];
+    memcpy(payload, sha256.result(), sizeof(payload));
+    bip39.setPayloadBytes(sizeof(payload));
+    bip39.setPayload(sizeof(payload), (uint8_t *)payload);
+    for (int ndx = 0; ndx < 12; ++ndx) {
+        uint16_t word = bip39.getWord(ndx);
+        Serial.printf("%d %s\n", ndx, bip39.getMnemonic(word));
+    }
+}
+
 void setup() {
     pinMode(25, OUTPUT);	// Blue LED
     digitalWrite(25, HIGH);
@@ -113,6 +130,8 @@ void setup() {
 
     while (!Serial);
     
+    do_bip39_stuff();
+    
     setupNetwork();
     Serial.println("connected");
 
@@ -121,20 +140,6 @@ void setup() {
     // Refresh the exchange rate.
     checkrate();
 
-    uint8_t payload[] = {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    };
-    Serial.println("calling setPayloadBytes");
-    bip39.setPayloadBytes(sizeof(payload));
-    Serial.println("calling setPayload");
-    bip39.setPayload(sizeof(payload), (uint8_t *)payload);
-    Serial.println("calling getWord");
-    for (int ndx = 0; ndx < 12; +ndx) {
-        uint16_t word = bip39.getWord(ndx);
-        Serial.printf("%d\n", word);
-        Serial.printf("%s\n", bip39.getMnemonic(word));
-    }
 }
 
 void loop() {
