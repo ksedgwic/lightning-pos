@@ -8,7 +8,7 @@ void cmc_rate() {
     // Loop until we succeed
     while (true) {
         Serial.printf("cmc_rate updating BTC%s\n", cfg_cmc_currency.c_str());
-        displayText(10, 100, "Updating BTC" + cfg_cmc_currency + " ...");
+        displayText(10, 100, "CoinMarketCap BTC" + cfg_cmc_currency + " ...");
 
         WiFiClientSecure client;
 

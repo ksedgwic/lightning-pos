@@ -9,7 +9,7 @@ void opn_rate() {
     // Loop until we succeed
     while (true) {
         Serial.printf("opn_rate updating %s\n", cfg_opn_currency.c_str());
-        displayText(10, 100, "Updating " + cfg_opn_currency + " ...");
+        displayText(10, 100, "OpenNode " + cfg_opn_currency + " ...");
 
         WiFiClientSecure client;
 

@@ -6,7 +6,7 @@ void btp_rate() {
     // Loop until we succeed
     while (true) {
         Serial.printf("btp_rate updating BTC%s\n", cfg_btp_currency.c_str());
-        displayText(10, 100, "Updating BTC" + cfg_btp_currency + " ...");
+        displayText(10, 100, "BTCPay BTC" + cfg_btp_currency + " ...");
 
         WiFiClientSecure client;
 
