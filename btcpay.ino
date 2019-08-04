@@ -152,7 +152,8 @@ payreq_t btp_createinvoice() {
     }
 }
 
-bool btp_checkpayment(String PAYID) {
+int btp_checkpayment(String PAYID) {
+    bool saw_error = false;
     WiFiClientSecure client;
 
     Serial.printf("btp_checkpayment %s\n", PAYID.c_str());
@@ -160,13 +161,14 @@ bool btp_checkpayment(String PAYID) {
     while (!client.connect(cfg_btp_host.c_str(), cfg_btp_port)) {
         Serial.printf("btp_checkpayment %s %d connect failed\n",
                       cfg_btp_host.c_str(), cfg_btp_port);
+        saw_error = true;
         setupNetwork();
     }
 
     if (cfg_btp_fingerprint.length() > 0 &&
         !client.verify(cfg_btp_fingerprint.c_str(), NULL)) {
         Serial.printf("btp_checkpayment verify failed\n");
-        return false;
+        return saw_error ? -1 : 0;
     }
         
     String url = "/invoices/" + PAYID;
@@ -204,13 +206,13 @@ bool btp_checkpayment(String PAYID) {
     DynamicJsonDocument doc(capacity);
     DeserializationError retval = deserializeJson(doc, line);
     if (retval == DeserializationError::NoMemory) {
-        return false;
+        return saw_error ? -1 : 0;
     } else if (retval != DeserializationError::Ok) {
         Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-        return false;
+        return saw_error ? -1 : 0;
     }
 
     String status = doc["data"]["status"];
     Serial.printf("btp_checkpayment -> %s\n", status.c_str());
-    return status == "complete";
+    return status == "complete" ? 1 : (saw_error ? -1 : 0);
 }

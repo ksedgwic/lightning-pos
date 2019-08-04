@@ -84,7 +84,8 @@ payreq_t lnd_createinvoice() {
     }
 }
 
-bool lnd_checkpayment(String PAYID) {
+int lnd_checkpayment(String PAYID) {
+    bool saw_error = false;
     WiFiClientSecure client;
 
     Serial.printf("lnd_checkpayment %s\n", PAYID.c_str());
@@ -92,13 +93,14 @@ bool lnd_checkpayment(String PAYID) {
     while (!client.connect(cfg_lnd_host.c_str(), cfg_lnd_port)) {
         Serial.printf("lnd_checkpayment %s %d connect failed\n",
                       cfg_lnd_host.c_str(), cfg_lnd_port);
+        saw_error = true;
         setupNetwork();
     }
 
     if (cfg_lnd_fingerprint.length() > 0 &&
         !client.verify(cfg_lnd_fingerprint.c_str(), NULL)) {
         Serial.printf("lnd_checkpayment verify failed\n");
-        return false;
+        return saw_error ? -1 : 0;
     }
         
     String url = "/v1/invoice/" + PAYID;
@@ -122,13 +124,13 @@ bool lnd_checkpayment(String PAYID) {
     DynamicJsonDocument doc(capacity);
     DeserializationError retval = deserializeJson(doc, line);
     if (retval == DeserializationError::NoMemory) {
-        return false;
+        return saw_error ? -1 : 0;
     } else if (retval != DeserializationError::Ok) {
         Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-        return false;
+        return saw_error ? -1 : 0;
     }
 
     String state = doc["state"];
     Serial.printf("lnd_checkpayment -> %s\n", state.c_str());
-    return state == "SETTLED";
+    return state == "SETTLED" ? 1 : (saw_error ? -1 : 0);
 }

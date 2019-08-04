@@ -128,21 +128,22 @@ payreq_t opn_createinvoice() {
 }
 
 // Check the status of the payment, return true if it has been paid.
-bool opn_checkpayment(String PAYID){
-
+int opn_checkpayment(String PAYID){
+    bool saw_error = false;
     WiFiClientSecure client;
 
     Serial.printf("opn_checkpayment %s\n", PAYID.c_str());
 
     while (!client.connect(opn_host, opn_port)) {
         Serial.printf("opn_checkpayment connect failed\n");
+        saw_error = true;
         setupNetwork();
     }
 
     if (cfg_opn_fingerprint.length() > 0 &&
         !client.verify(cfg_opn_fingerprint.c_str(), NULL)) {
         Serial.printf("opn_checkpayment verify failed\n");
-        return false;
+        return saw_error ? -1 : 0;
     }
         
     String url = "/v1/charge/" + PAYID;
@@ -168,13 +169,14 @@ bool opn_checkpayment(String PAYID){
     DynamicJsonDocument doc(capacity);
     DeserializationError retval = deserializeJson(doc, line);
     if (retval == DeserializationError::NoMemory) {
-        return false;
+        return saw_error ? -1 : 0;
     } else if (retval != DeserializationError::Ok) {
         Serial.printf("deserializeJson failed: %s\n", retval.c_str());
-        return false;
+        return saw_error ? -1 : 0;
     }
         
     String stat = doc["data"]["status"];
     Serial.printf("opn_checkpayment -> %s\n", stat.c_str());
-    return stat == "paid";
+    return stat == "paid" ? 1 : (saw_error ? -1 : 0);
+
 }

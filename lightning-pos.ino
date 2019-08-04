@@ -225,7 +225,8 @@ void displayMenu() {
         g_display.setFont(&FreeSansBold9pt7b);
         for (int ndx = 0; ndx < 4; ++ndx) {
             char but = 'A' + ndx;
-            g_display.printf("  %c - %s\n", but, cfg_presets[ndx].title.c_str());
+            g_display.printf("  %c - %s\n",
+                             but, cfg_presets[ndx].title.c_str());
         }
     }
     while (g_display.nextPage());
@@ -359,106 +360,76 @@ void showPartialUpdate(String centsStr) {
     while (g_display.nextPage());
 }
     
-//Set other Arduino Strings used
-String g_qrline = "";
-String g_hexvalues = "";
-
-// QR maker function
-void qrmmaker(String xxx){
-    int str_len = xxx.length() + 1;
-    char xxxx[str_len];
-    xxx.toCharArray(xxxx, str_len);
-
-    QRCode qrcode;
-    uint8_t qrcodeData[qrcode_getBufferSize(11)];
-    qrcode_initText(&qrcode, qrcodeData, 11, 0, xxxx);
-
-    int une = 0;
-
-    g_qrline = "";
-
-    for (uint8_t y = 0; y < qrcode.size; y++) {
-
-        // Each horizontal module
-        for (uint8_t x = 0; x < qrcode.size; x++) {
-            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
-        }
-        g_qrline += "1";
-        for (uint8_t x = 0; x < qrcode.size; x++) {
-            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
-        }
-        g_qrline += "1";
-        for (uint8_t x = 0; x < qrcode.size; x++) {
-            g_qrline += (qrcode_getModule(&qrcode, x, y) ? "111": "000");
-        }
-        g_qrline += "1";
-    }
-}
-
-//Char for holding the QR byte array
-unsigned char PROGMEM g_singlehex[4209];
-
-// Display QRcode
 bool displayQR(payreq_t * payreqp) {
-    String setoffour = "";
-    String result = "";
- 
-    //Char dictionary for conversion from 1s and 0s
-    const char ref[2][16][5]={
-        {
-         "0000","0001","0010","0011","0100","0101","0110","0111",
-         "1000","1001","1010","1011","1100","1101","1110","1111"
-        },
-        {
-         "0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"
-        }
+    // This code from https://github.com/arcbtc/koopa/blob/master/main.ino
+    
+    // auto detect best qr code size
+    int qrSize = 10;
+    int ec_lvl = 3;
+    int const sizes[18][4] = {
+                        /* https://github.com/ricmoo/QRCode */
+                        /* 1 */ { 17, 14, 11, 7 },
+                        /* 2 */ { 32, 26, 20, 14 },
+                        /* 3 */ { 53, 42, 32, 24 },
+                        /* 4 */ { 78, 62, 46, 34 },
+                        /* 5 */ { 106, 84, 60, 44 },
+                        /* 6 */ { 134, 106, 74, 58 },
+                        /* 7 */ { 154, 122, 86, 64 },
+                        /* 8 */ { 192, 152, 108, 84 },
+                        /* 9 */ { 230, 180, 130, 98 },
+                        /* 10 */ { 271, 213, 151, 119 },
+                        /* 11 */ { 321, 251, 177, 137 },
+                        /* 12 */ { 367, 287, 203, 155 },
+                        /* 13 */ { 425, 331, 241, 177 },
+                        /* 14 */ { 458, 362, 258, 194 },
+                        /* 15 */ { 520, 412, 292, 220 },
+                        /* 16 */ { 586, 450, 322, 250 },
+                        /* 17 */ { 644, 504, 364, 280 },
     };
-
-    g_hexvalues = "";
-
-    qrmmaker(payreqp->invoice);
-
-    for (int i = 0;  i < g_qrline.length(); i+=4) {
-        int tmp = i;
-        setoffour = g_qrline.substring(tmp, tmp+4);
-
-        for (int z = 0; z < 16; z++){
-            if (setoffour == ref[0][z]){
-                g_hexvalues += ref[1][z];
-            }
+    int len = payreqp->invoice.length();
+    for(int ii=0; ii<18; ii++){
+        qrSize = ii+1;
+        if(sizes[ii][ec_lvl] > len){
+            break;
         }
     }
 
-    g_qrline = "";
+    Serial.printf("len = %d, ec_lvl = %d, qrSize = %d\n",
+                  len, ec_lvl, qrSize);
 
-    //for loop to build the epaper friendly char singlehex byte array
-    //image of the QR
-    for (int i = 0;  i < 4209; i++) {
-        int tmp = i;
-        int pmt = tmp*2;
-        result = "0x" + g_hexvalues.substring(pmt, pmt+2) + ",";
-        g_singlehex[tmp] =
-            (unsigned char)strtol(g_hexvalues.substring(pmt, pmt+2).c_str(),
-                                  NULL, 16);
-    }
+    // Create the QR code
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
+    qrcode_initText(&qrcode, qrcodeData, qrSize, ec_lvl,
+                    payreqp->invoice.c_str());
+
+    int width = 17 + 4*qrSize;
+    int scale = 190/width;
+    int padding = (200 - width*scale)/2;
 
     g_display.firstPage();
     do
     {
         g_display.setPartialWindow(0, 0, 200, 200);
         g_display.fillScreen(GxEPD_WHITE);
-        g_display.drawBitmap( 7, 7, g_singlehex, 184, 183, GxEPD_BLACK);
-
+        // for every pixel in QR code we draw a rectangle with size `scale`
+        for (uint8_t y = 0; y < qrcode.size; y++) {
+            for (uint8_t x = 0; x < qrcode.size; x++) {
+                if(qrcode_getModule(&qrcode, x, y)){
+                    g_display.fillRect(padding+scale*x,
+                                       padding+scale*y,
+                                       scale, scale, GxEPD_BLACK);
+                }
+            }
+        }
     }
     while (g_display.nextPage());
-
-    return true;
 }
 
 // Handle outcome
 void waitForPayment(payreq_t * payreqp) {
     int counta = 0;
-    bool ispaid = false;
+    int ispaid = 0;
     if (cfg_invoice_api == "OPN") {
         ispaid = opn_checkpayment(payreqp->id);
     } else if (cfg_invoice_api == "BTP") {
@@ -468,7 +439,12 @@ void waitForPayment(payreq_t * payreqp) {
     }
     
     while (counta < 40) {
-        if (!ispaid) {
+        switch (ispaid) {
+        case -1: // error while checking, not paid after reconnect
+            // Need to redisplay the qr code
+            displayQR(payreqp);
+            // fallthrough on purpose
+        case 0: // not paid yet
             // Delay, checking for abort.
             for (int nn = 0; nn < 10; ++nn) {
                 if (g_keypad.getKey() == '*') {
@@ -484,9 +460,8 @@ void waitForPayment(payreq_t * payreqp) {
                 ispaid = lnd_checkpayment(payreqp->id);
             }
             counta++;
-        }
-        else
-        {
+            break;
+        case 1: // paid
             // Display big success message.
             g_display.firstPage();
             do
@@ -508,6 +483,7 @@ void waitForPayment(payreq_t * payreqp) {
             digitalWrite(26, LOW);
             delay(500);
             counta = 40;
+            break;
         }
     }
 }
