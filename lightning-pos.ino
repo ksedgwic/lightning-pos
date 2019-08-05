@@ -365,7 +365,7 @@ bool displayQR(payreq_t * payreqp) {
     
     // auto detect best qr code size
     int qrSize = 10;
-    int ec_lvl = 3;
+    int ec_lvl = 0;
     int const sizes[18][4] = {
                         /* https://github.com/ricmoo/QRCode */
                         /* 1 */ { 17, 14, 11, 7 },
@@ -376,11 +376,11 @@ bool displayQR(payreq_t * payreqp) {
                         /* 6 */ { 134, 106, 74, 58 },
                         /* 7 */ { 154, 122, 86, 64 },
                         /* 8 */ { 192, 152, 108, 84 },
-                        /* 9 */ { 230, 180, 130, 98 },
-                        /* 10 */ { 271, 213, 151, 119 },
+                        /* 9 */ { 230, 180, 130, 98 },      // OPN:0 LND:0 good
+                        /* 10 */ { 271, 213, 151, 119 },	// BTP:0 OPN:1 good
                         /* 11 */ { 321, 251, 177, 137 },
-                        /* 12 */ { 367, 287, 203, 155 },
-                        /* 13 */ { 425, 331, 241, 177 },
+                        /* 12 */ { 367, 287, 203, 155 },    // BTP:1 bad
+                        /* 13 */ { 425, 331, 241, 177 },	// BTP:2 meh
                         /* 14 */ { 458, 362, 258, 194 },
                         /* 15 */ { 520, 412, 292, 220 },
                         /* 16 */ { 586, 450, 322, 250 },
@@ -402,6 +402,8 @@ bool displayQR(payreq_t * payreqp) {
     uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
     qrcode_initText(&qrcode, qrcodeData, qrSize, ec_lvl,
                     payreqp->invoice.c_str());
+    
+    Serial.printf("saw qr mode = %d\n", qrcode.mode);
 
     int width = 17 + 4*qrSize;
     int scale = 190/width;
